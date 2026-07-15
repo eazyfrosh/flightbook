@@ -124,6 +124,7 @@ export interface Booking {
 export type UserRole = "user" | "admin";
 
 export interface UserProfile {
+  id: string;
   uid: string;
   email: string;
   displayName: string;
@@ -164,4 +165,20 @@ export interface RecentSearch {
   cabin: CabinClass;
   tripType: TripType;
   timestamp: number;
+}
+
+export type FlightStatusValue = "scheduled" | "delayed" | "boarding" | "departed" | "landed" | "cancelled";
+
+export interface AdminFlightListing {
+  id: string;
+  airlineId: string;
+  flightNumber: string;
+  originCode: string;
+  destinationCode: string;
+  departureTime: string;
+  arrivalTime: string;
+  cabin: CabinClass;
+  price: number;
+  aircraft: string;
+  status: FlightStatusValue;
 }

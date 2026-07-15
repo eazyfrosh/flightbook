@@ -18,8 +18,8 @@ import {
   signOut,
   updateProfile as updateFirebaseProfile,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db, isFirebaseConfigured } from "@/lib/firebase/client";
+import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
+import { getOne, upsert } from "@/lib/services/store";
 import type { PassengerInfo, SavedPaymentMethod, UserProfile } from "@/types";
 
 interface DemoUserRecord {
@@ -32,9 +32,9 @@ interface DemoUserRecord {
 
 const DEMO_USERS_KEY = "skybook_demo_users";
 const DEMO_SESSION_KEY = "skybook_demo_session";
-const DEMO_PROFILES_KEY = "skybook_demo_profiles";
 const DEMO_ADMIN_EMAIL = "admin@skybook.demo";
 const DEMO_ADMIN_PASSWORD = "admin123";
+const USERS_COLLECTION = "users";
 
 function readDemoUsers(): DemoUserRecord[] {
   if (typeof window === "undefined") return [];
@@ -46,17 +46,7 @@ function writeDemoUsers(users: DemoUserRecord[]) {
   window.localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(users));
 }
 
-function readDemoProfiles(): Record<string, UserProfile> {
-  if (typeof window === "undefined") return {};
-  const raw = window.localStorage.getItem(DEMO_PROFILES_KEY);
-  return raw ? (JSON.parse(raw) as Record<string, UserProfile>) : {};
-}
-
-function writeDemoProfiles(profiles: Record<string, UserProfile>) {
-  window.localStorage.setItem(DEMO_PROFILES_KEY, JSON.stringify(profiles));
-}
-
-function ensureDemoAdminSeed() {
+async function ensureDemoAdminSeed() {
   const users = readDemoUsers();
   if (users.some((u) => u.email === DEMO_ADMIN_EMAIL)) return;
   const uid = "demo-admin-uid";
@@ -68,8 +58,8 @@ function ensureDemoAdminSeed() {
     emailVerified: true,
   });
   writeDemoUsers(users);
-  const profiles = readDemoProfiles();
-  profiles[uid] = {
+  await upsert<UserProfile>(USERS_COLLECTION, {
+    id: uid,
     uid,
     email: DEMO_ADMIN_EMAIL,
     displayName: "SkyBook Admin",
@@ -78,8 +68,7 @@ function ensureDemoAdminSeed() {
     savedPassengers: [],
     savedPaymentMethods: [],
     favoriteDestinations: [],
-  };
-  writeDemoProfiles(profiles);
+  });
 }
 
 interface AuthContextValue {
@@ -102,53 +91,56 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function makeProfile(uid: string, email: string, displayName: string): UserProfile {
+  return {
+    id: uid,
+    uid,
+    email,
+    displayName: displayName || email.split("@")[0],
+    role: "user",
+    createdAt: new Date().toISOString(),
+    savedPassengers: [],
+    savedPaymentMethods: [],
+    favoriteDestinations: [],
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthContextValue["user"]>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const isDemoMode = !isFirebaseConfigured;
 
-  const loadProfileFirebase = useCallback(async (uid: string, email: string, displayName: string) => {
-    if (!db) return;
-    const ref = doc(db, "users", uid);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      setProfile(snap.data() as UserProfile);
-    } else {
-      const newProfile: UserProfile = {
-        uid,
-        email,
-        displayName: displayName || email.split("@")[0],
-        role: "user",
-        createdAt: new Date().toISOString(),
-        savedPassengers: [],
-        savedPaymentMethods: [],
-        favoriteDestinations: [],
-      };
-      await setDoc(ref, newProfile);
-      setProfile(newProfile);
+  const loadOrCreateProfile = useCallback(async (uid: string, email: string, displayName: string) => {
+    const existing = await getOne<UserProfile>(USERS_COLLECTION, uid);
+    if (existing) {
+      setProfile(existing);
+      return existing;
     }
+    const created = makeProfile(uid, email, displayName);
+    await upsert(USERS_COLLECTION, created);
+    setProfile(created);
+    return created;
   }, []);
 
   useEffect(() => {
     if (isDemoMode) {
-      ensureDemoAdminSeed();
-      const sessionUid = window.localStorage.getItem(DEMO_SESSION_KEY);
-      if (sessionUid) {
-        const users = readDemoUsers();
-        const found = users.find((u) => u.uid === sessionUid);
-        if (found) {
-          setUser({
-            uid: found.uid,
-            email: found.email,
-            displayName: found.displayName,
-            emailVerified: found.emailVerified,
-          });
-          const profiles = readDemoProfiles();
-          setProfile(profiles[found.uid] ?? null);
+      ensureDemoAdminSeed().then(() => {
+        const sessionUid = window.localStorage.getItem(DEMO_SESSION_KEY);
+        if (sessionUid) {
+          const found = readDemoUsers().find((u) => u.uid === sessionUid);
+          if (found) {
+            setUser({
+              uid: found.uid,
+              email: found.email,
+              displayName: found.displayName,
+              emailVerified: found.emailVerified,
+            });
+            getOne<UserProfile>(USERS_COLLECTION, found.uid).then((p) => setProfile(p));
+          }
         }
-      }
-      setLoading(false);
+        setLoading(false);
+      });
       return;
     }
 
@@ -165,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           displayName: firebaseUser.displayName ?? "",
           emailVerified: firebaseUser.emailVerified,
         });
-        await loadProfileFirebase(firebaseUser.uid, firebaseUser.email ?? "", firebaseUser.displayName ?? "");
+        await loadOrCreateProfile(firebaseUser.uid, firebaseUser.email ?? "", firebaseUser.displayName ?? "");
       } else {
         setUser(null);
         setProfile(null);
@@ -173,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [isDemoMode, loadProfileFirebase]);
+  }, [isDemoMode, loadOrCreateProfile]);
 
   const signUp = useCallback(
     async (email: string, password: string, displayName: string) => {
@@ -185,19 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const uid = `demo-${Date.now()}`;
         users.push({ uid, email, password, displayName, emailVerified: false });
         writeDemoUsers(users);
-        const profiles = readDemoProfiles();
-        const newProfile: UserProfile = {
-          uid,
-          email,
-          displayName,
-          role: "user",
-          createdAt: new Date().toISOString(),
-          savedPassengers: [],
-          savedPaymentMethods: [],
-          favoriteDestinations: [],
-        };
-        profiles[uid] = newProfile;
-        writeDemoProfiles(profiles);
+        const newProfile = makeProfile(uid, email, displayName);
+        await upsert(USERS_COLLECTION, newProfile);
         window.localStorage.setItem(DEMO_SESSION_KEY, uid);
         setUser({ uid, email, displayName, emailVerified: false });
         setProfile(newProfile);
@@ -207,16 +188,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       if (displayName) await updateFirebaseProfile(cred.user, { displayName });
       await sendEmailVerification(cred.user);
-      await loadProfileFirebase(cred.user.uid, email, displayName);
+      await loadOrCreateProfile(cred.user.uid, email, displayName);
     },
-    [isDemoMode, loadProfileFirebase]
+    [isDemoMode, loadOrCreateProfile]
   );
 
   const logIn = useCallback(
     async (email: string, password: string) => {
       if (isDemoMode) {
-        const users = readDemoUsers();
-        const found = users.find((u) => u.email === email && u.password === password);
+        const found = readDemoUsers().find((u) => u.email === email && u.password === password);
         if (!found) throw new Error("Invalid email or password.");
         window.localStorage.setItem(DEMO_SESSION_KEY, found.uid);
         setUser({
@@ -225,8 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           displayName: found.displayName,
           emailVerified: found.emailVerified,
         });
-        const profiles = readDemoProfiles();
-        setProfile(profiles[found.uid] ?? null);
+        setProfile(await getOne<UserProfile>(USERS_COLLECTION, found.uid));
         return;
       }
       if (!auth) throw new Error("Firebase is not configured.");
@@ -248,8 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPassword = useCallback(
     async (email: string) => {
       if (isDemoMode) {
-        const users = readDemoUsers();
-        if (!users.some((u) => u.email === email)) {
+        if (!readDemoUsers().some((u) => u.email === email)) {
           throw new Error("No account found with this email.");
         }
         return;
@@ -276,20 +254,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [isDemoMode, user]);
 
-  const persistProfile = useCallback(
-    async (nextProfile: UserProfile) => {
-      setProfile(nextProfile);
-      if (isDemoMode) {
-        const profiles = readDemoProfiles();
-        profiles[nextProfile.uid] = nextProfile;
-        writeDemoProfiles(profiles);
-        return;
-      }
-      if (!db) return;
-      await setDoc(doc(db, "users", nextProfile.uid), nextProfile, { merge: true });
-    },
-    [isDemoMode]
-  );
+  const persistProfile = useCallback(async (nextProfile: UserProfile) => {
+    setProfile(nextProfile);
+    await upsert(USERS_COLLECTION, nextProfile);
+  }, []);
 
   const updateUserProfile = useCallback(
     async (partial: Partial<UserProfile>) => {
