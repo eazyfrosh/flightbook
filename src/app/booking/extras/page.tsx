@@ -9,6 +9,7 @@ import { SeatMap } from "@/components/booking/seat-map";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
 import { useBookingStore } from "@/lib/store/booking-store";
+import { useBookingHydrated } from "@/lib/store/use-hydrated";
 import { MEAL_OPTIONS } from "@/lib/data/flights";
 import { formatCurrency } from "@/lib/utils";
 
@@ -17,6 +18,12 @@ const INSURANCE_PRICE = 29;
 const PRIORITY_PRICE = 19;
 
 export default function ExtrasPage() {
+  const hydrated = useBookingHydrated();
+  if (!hydrated) return null;
+  return <ExtrasForm />;
+}
+
+function ExtrasForm() {
   const router = useRouter();
   const { itinerary, extras, setExtras } = useBookingStore();
   const [local, setLocal] = useState(extras);

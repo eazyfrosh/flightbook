@@ -11,6 +11,7 @@ import { TripSummary } from "@/components/booking/trip-summary";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label } from "@/components/ui/input";
 import { useBookingStore } from "@/lib/store/booking-store";
+import { useBookingHydrated } from "@/lib/store/use-hydrated";
 import { useAuth } from "@/context/auth-context";
 import { createBooking } from "@/lib/services/bookings";
 import { cardPaymentSchema, type CardPaymentValues } from "@/lib/validation/payment";
@@ -30,6 +31,13 @@ const methods: { id: PaymentMethodType; label: string; icon: React.ReactNode }[]
 ];
 
 export default function PaymentPage() {
+  const hydrated = useBookingHydrated();
+  const { loading: authLoading } = useAuth();
+  if (!hydrated || authLoading) return null;
+  return <PaymentForm />;
+}
+
+function PaymentForm() {
   const router = useRouter();
   const { itinerary, passengers, extras, searchParams, reset } = useBookingStore();
   const { user, addSavedPaymentMethod } = useAuth();

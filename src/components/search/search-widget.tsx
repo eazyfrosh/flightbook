@@ -77,7 +77,7 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
   return (
     <div
       className={cn(
-        "w-full rounded-3xl border border-black/8 bg-white/95 p-4 shadow-2xl shadow-black/10 backdrop-blur sm:p-6 dark:border-white/10 dark:bg-neutral-900/90",
+        "w-full rounded-3xl border border-black/8 bg-white/95 p-4 text-foreground shadow-2xl shadow-black/10 backdrop-blur sm:p-6 dark:border-white/10 dark:bg-neutral-900/90",
         compact && "p-3 sm:p-4"
       )}
     >

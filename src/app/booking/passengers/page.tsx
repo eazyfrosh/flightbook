@@ -13,6 +13,7 @@ import { useBookingStore } from "@/lib/store/booking-store";
 import { useAuth } from "@/context/auth-context";
 import { passengersFormSchema, type PassengersFormValues } from "@/lib/validation/passenger";
 import { nationalities } from "@/lib/data/nationalities";
+import { useBookingHydrated } from "@/lib/store/use-hydrated";
 import type { PassengerInfo } from "@/types";
 
 function blankPassenger(type: PassengerInfo["type"], idx: number): PassengerInfo {
@@ -31,6 +32,12 @@ function blankPassenger(type: PassengerInfo["type"], idx: number): PassengerInfo
 }
 
 export default function PassengersPage() {
+  const hydrated = useBookingHydrated();
+  if (!hydrated) return null;
+  return <PassengersForm />;
+}
+
+function PassengersForm() {
   const router = useRouter();
   const { itinerary, searchParams, passengers: storedPassengers, setPassengers } = useBookingStore();
   const { profile } = useAuth();
