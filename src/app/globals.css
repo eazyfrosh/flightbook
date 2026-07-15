@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f7f8fb;
+  --foreground: #0b1220;
+}
+
+.dark {
+  --background: #06090f;
+  --foreground: #edf1f7;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-brand-50: #eef6ff;
+  --color-brand-100: #d9ecff;
+  --color-brand-200: #b8dcff;
+  --color-brand-300: #86c5ff;
+  --color-brand-400: #4ea6ff;
+  --color-brand-500: #1f83fb;
+  --color-brand-600: #0d63d6;
+  --color-brand-700: #0a4eac;
+  --color-brand-800: #0d418a;
+  --color-brand-900: #0f3770;
+  --color-gold-400: #f2c265;
+  --color-gold-500: #e2a836;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: var(--color-brand-500);
+  color: white;
+}
+
+.glass {
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+}
+.animate-float-slow {
+  animation: float-slow 7s ease-in-out infinite;
+}
+
