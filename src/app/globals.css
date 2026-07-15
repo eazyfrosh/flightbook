@@ -56,3 +56,13 @@ body {
   animation: float-slow 7s ease-in-out infinite;
 }
 
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+

@@ -12,13 +12,13 @@ import type {
 
 interface BookingState {
   searchParams: FlightSearchParams | null;
-  selectedFlight: Flight | null;
-  returnFlight: Flight | null;
+  itinerary: Flight[];
   passengers: PassengerInfo[];
   extras: ExtrasSelection;
   paymentMethod: PaymentMethodType | null;
   setSearchParams: (params: FlightSearchParams) => void;
-  selectFlight: (flight: Flight) => void;
+  setItineraryLeg: (legIndex: number, flight: Flight) => void;
+  clearItinerary: () => void;
   setPassengers: (passengers: PassengerInfo[]) => void;
   setExtras: (extras: ExtrasSelection) => void;
   setPaymentMethod: (method: PaymentMethodType) => void;
@@ -35,22 +35,25 @@ const defaultExtras: ExtrasSelection = {
 
 export const useBookingStore = create<BookingState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       searchParams: null,
-      selectedFlight: null,
-      returnFlight: null,
+      itinerary: [],
       passengers: [],
       extras: defaultExtras,
       paymentMethod: null,
       setSearchParams: (params) => set({ searchParams: params }),
-      selectFlight: (flight) => set({ selectedFlight: flight }),
+      setItineraryLeg: (legIndex, flight) => {
+        const itinerary = [...get().itinerary];
+        itinerary[legIndex] = flight;
+        set({ itinerary });
+      },
+      clearItinerary: () => set({ itinerary: [] }),
       setPassengers: (passengers) => set({ passengers }),
       setExtras: (extras) => set({ extras }),
       setPaymentMethod: (method) => set({ paymentMethod: method }),
       reset: () =>
         set({
-          selectedFlight: null,
-          returnFlight: null,
+          itinerary: [],
           passengers: [],
           extras: defaultExtras,
           paymentMethod: null,

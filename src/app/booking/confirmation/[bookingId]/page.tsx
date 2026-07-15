@@ -1,0 +1,128 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { CheckCircle2, PlaneTakeoff, Ticket } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { QRCodeImage } from "@/components/booking/qr-code";
+import { DownloadPdfButton } from "@/components/booking/download-pdf-button";
+import { getBooking } from "@/lib/services/bookings";
+import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
+import type { Booking } from "@/types";
+
+export default function ConfirmationPage() {
+  const { bookingId } = useParams<{ bookingId: string }>();
+  const router = useRouter();
+  const [booking, setBooking] = useState<Booking | null | undefined>(undefined);
+
+  useEffect(() => {
+    getBooking(bookingId).then(setBooking);
+  }, [bookingId]);
+
+  if (booking === undefined) {
+    return <div className="mx-auto max-w-2xl px-4 py-24 text-center text-foreground/50">Loading booking…</div>;
+  }
+
+  if (!booking) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+        <h1 className="text-xl font-semibold">Booking not found</h1>
+        <p className="mt-2 text-foreground/60">This booking may have been removed or the link is incorrect.</p>
+        <Button className="mt-6" onClick={() => router.push("/dashboard")}>Go to dashboard</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mb-8 text-center">
+        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+          <CheckCircle2 size={32} />
+        </span>
+        <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Booking confirmed!</h1>
+        <p className="mt-1 text-foreground/60">
+          A confirmation has been simulated for <strong>{booking.passengers[0]?.email}</strong>. This is a demo — no real email is sent.
+        </p>
+      </div>
+
+      <Card className="mb-6">
+        <CardContent className="flex flex-col items-center gap-5 p-6 sm:flex-row sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-foreground/50">Booking reference</p>
+            <p className="text-3xl font-bold tracking-widest text-brand-700 dark:text-brand-400">
+              {booking.bookingReference}
+            </p>
+            <Badge tone="green" className="mt-2">{booking.status}</Badge>
+          </div>
+          <QRCodeImage value={`SKYBOOK|${booking.bookingReference}|${booking.id}`} />
+        </CardContent>
+      </Card>
+
+      <div className="mb-6 space-y-4">
+        {booking.flights.map((flight, idx) => {
+          const first = flight.segments[0];
+          const last = flight.segments[flight.segments.length - 1];
+          return (
+            <Card key={idx}>
+              <CardContent className="p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="flex items-center gap-2 font-semibold">
+                    <PlaneTakeoff size={16} className="text-brand-600 dark:text-brand-400" />
+                    {first.airline.name} · {flight.segments.map((s) => s.flightNumber).join(", ")}
+                  </p>
+                  <Badge tone="brand">{cabinLabel(flight.cabin)}</Badge>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <div>
+                    <p className="text-lg font-bold">{formatTime(first.departureTime)}</p>
+                    <p className="text-foreground/50">{first.originCode} · {formatDateLong(first.departureTime)}</p>
+                  </div>
+                  <div className="text-foreground/40">→</div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold">{formatTime(last.arrivalTime)}</p>
+                    <p className="text-foreground/50">{last.destinationCode} · {formatDateLong(last.arrivalTime)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Card className="mb-6">
+        <CardContent className="p-5">
+          <h3 className="mb-3 font-semibold">Passengers</h3>
+          <ul className="space-y-1.5 text-sm text-foreground/70">
+            {booking.passengers.map((p) => (
+              <li key={p.id}>
+                {p.firstName} {p.lastName} <span className="text-foreground/40">· {p.type}</span>
+              </li>
+            ))}
+          </ul>
+          {booking.seatAssignment && (
+            <p className="mt-3 text-sm text-foreground/60">Seat: <strong>{booking.seatAssignment}</strong></p>
+          )}
+          <div className="mt-4 flex justify-between border-t border-black/8 pt-3 text-base font-bold dark:border-white/10">
+            <span>Total paid</span>
+            <span className="text-brand-700 dark:text-brand-400">{formatCurrency(booking.totalPrice, booking.currency)}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-wrap justify-center gap-3">
+        <DownloadPdfButton label="Download confirmation (PDF)" />
+        <Link href={`/boarding-pass/${booking.id}`}>
+          <Button variant="secondary">
+            <Ticket size={16} /> View boarding pass
+          </Button>
+        </Link>
+        <Link href="/dashboard">
+          <Button>Go to dashboard</Button>
+        </Link>
+      </div>
+    </div>
+  );
+}

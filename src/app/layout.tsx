@@ -38,10 +38,14 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <ThemeProvider>
           <AuthProvider>
-            <DemoBanner />
-            <Header />
+            <div className="no-print">
+              <DemoBanner />
+              <Header />
+            </div>
             <main className="flex-1">{children}</main>
-            <Footer />
+            <div className="no-print">
+              <Footer />
+            </div>
             <Toaster position="top-center" richColors closeButton />
           </AuthProvider>
         </ThemeProvider>

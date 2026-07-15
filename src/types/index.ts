@@ -110,7 +110,7 @@ export interface Booking {
   id: string;
   bookingReference: string;
   userId: string;
-  flight: Flight;
+  flights: Flight[];
   passengers: PassengerInfo[];
   extras: ExtrasSelection;
   totalPrice: number;
@@ -118,7 +118,7 @@ export interface Booking {
   status: BookingStatus;
   createdAt: string;
   paymentMethod: PaymentMethodType;
-  seatAssignments: Record<string, string>;
+  seatAssignment: string | null;
 }
 
 export type UserRole = "user" | "admin";
