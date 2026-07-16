@@ -96,6 +96,19 @@ export function SearchResultsClient() {
 
   const paramsKey = params.toString();
 
+  // Bare navigation to /search (no search was ever performed) is not a valid
+  // state for this page to render — it should send the user back to a real
+  // search form instead of showing an error. A manually-entered URL with
+  // garbage params (e.g. ?from=XXX) still falls through to the error card below.
+  const hasSearchIntent = Boolean(params.get("from") || params.get("to") || params.get("segments"));
+
+  useEffect(() => {
+    if (!hasSearchIntent) {
+      router.replace("/#search-widget");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasSearchIntent]);
+
   useEffect(() => {
     setSearchParams({
       tripType,
@@ -155,6 +168,11 @@ export function SearchResultsClient() {
       setActiveLeg(activeLeg + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  }
+
+  if (!hasSearchIntent) {
+    // Redirecting to the homepage search form via the effect above.
+    return null;
   }
 
   if (!currentLeg || !originAirport || !destinationAirport) {

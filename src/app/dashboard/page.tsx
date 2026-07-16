@@ -73,7 +73,7 @@ export default function DashboardPage() {
           <Link href="/dashboard/profile">
             <Button variant="outline"><User size={15} /> Profile</Button>
           </Link>
-          <Link href="/search">
+          <Link href="/#search-widget">
             <Button><PlaneTakeoff size={15} /> Book a flight</Button>
           </Link>
         </div>
@@ -104,7 +104,7 @@ export default function DashboardPage() {
       ) : shown.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-black/15 p-16 text-center dark:border-white/20">
           <p className="text-foreground/50">No {tab} trips yet.</p>
-          <Link href="/search">
+          <Link href="/#search-widget">
             <Button className="mt-4">Search flights</Button>
           </Link>
         </div>

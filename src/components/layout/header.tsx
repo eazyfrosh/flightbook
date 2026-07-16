@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 
 const navLinks = [
-  { href: "/search", label: "Search Flights" },
+  { href: "/#search-widget", label: "Search Flights" },
   { href: "/flight-status", label: "Flight Status" },
   { href: "/manage-booking", label: "Manage Booking" },
   { href: "/deals", label: "Deals" },

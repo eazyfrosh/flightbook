@@ -1,9 +1,23 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { SearchWidget } from "@/components/search/search-widget";
+import { cn } from "@/lib/utils";
 
 export function Hero() {
+  const searchRef = useRef<HTMLDivElement>(null);
+  const [highlighted, setHighlighted] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash === "#search-widget") {
+      searchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlighted(true);
+      const timeout = setTimeout(() => setHighlighted(false), 1800);
+      return () => clearTimeout(timeout);
+    }
+  }, []);
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-brand-900 via-brand-800 to-brand-700 pb-28 pt-16 text-white sm:pt-24">
       <div className="pointer-events-none absolute inset-0 opacity-40">
@@ -29,10 +43,15 @@ export function Hero() {
         </motion.div>
 
         <motion.div
+          id="search-widget"
+          ref={searchRef}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15 }}
-          className="mx-auto mt-10 max-w-5xl text-left"
+          className={cn(
+            "mx-auto mt-10 max-w-5xl scroll-mt-28 rounded-3xl text-left transition-shadow duration-700",
+            highlighted && "ring-4 ring-gold-400/70"
+          )}
         >
           <SearchWidget />
         </motion.div>

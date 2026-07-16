@@ -20,7 +20,7 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold">Explore</h4>
             <ul className="mt-3 space-y-2 text-sm text-foreground/60">
-              <li><Link href="/search" className="hover:text-foreground">Search flights</Link></li>
+              <li><Link href="/#search-widget" className="hover:text-foreground">Search flights</Link></li>
               <li><Link href="/flight-status" className="hover:text-foreground">Flight status</Link></li>
               <li><Link href="/manage-booking" className="hover:text-foreground">Manage booking</Link></li>
               <li><Link href="/deals" className="hover:text-foreground">Deals</Link></li>

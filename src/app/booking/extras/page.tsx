@@ -32,7 +32,7 @@ function ExtrasForm() {
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
-    if (itinerary.filter(Boolean).length === 0) router.replace("/search");
+    if (itinerary.filter(Boolean).length === 0) router.replace("/#search-widget");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
