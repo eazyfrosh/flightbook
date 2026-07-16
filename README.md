@@ -2,8 +2,9 @@
 
 SkyBook is a portfolio/demo flight-booking platform built to look and feel like a
 production travel site (Expedia/Google Flights-style). **It is not connected to any
-real airline, GDS, or payment processor.** All flights, prices, availability, and
-payments are simulated with deterministic mock data.
+real airline or GDS, and it has no payment system of any kind.** Booking a flight
+is completely free — all flights, prices, and availability are simulated with
+deterministic mock data.
 
 ## Tech stack
 
@@ -24,8 +25,8 @@ Open http://localhost:3000.
 ## Demo mode vs. real Firebase
 
 The app works out of the box with **zero configuration** using a local-demo auth
-mode backed by `localStorage`: sign up, log in, save passengers/payment methods,
-and book flights all work without any Firebase project.
+mode backed by `localStorage`: sign up, log in, save passengers, and book flights
+all work without any Firebase project.
 
 A seeded demo admin account is created automatically in this mode:
 
@@ -52,6 +53,24 @@ to know which backend is active. In real-Firebase mode, the first admin user
 must have their `role` field set to `"admin"` directly in the `users` Firestore
 collection (there's no self-serve admin signup).
 
+## Booking flow
+
+There is no payment step anywhere in the app. Booking a flight is:
+
+**Search Flights → Select Flight → Passenger Information → Extras → Booking Confirmation**
+
+A user must be signed in to complete the final "Confirm booking" step (so the
+booking can be attached to their account and shown on their dashboard), but no
+payment method is ever collected. The Booking Confirmation page shows:
+
+- Booking reference
+- Passenger details
+- Flight details (airline, departure & arrival, seat number)
+- Extras selected
+- Ticket price (taken directly from the flight record) and total
+- A QR code
+- A downloadable PDF itinerary (via the browser's print dialog)
+
 ## Feature overview
 
 - **Homepage** — hero search widget (one-way / round-trip / multi-city, cabin
@@ -60,14 +79,13 @@ collection (there's no self-serve admin signup).
   departure/arrival window, refundable), sorting, per-leg selection for
   round-trip/multi-city.
 - **Booking flow** — passenger info (React Hook Form + Zod), extras (seat map,
-  meal, baggage, insurance, priority boarding), mock payment (card / PayPal /
-  Apple Pay / Google Pay), confirmation with QR code, boarding pass page.
+  meal, baggage, insurance, priority boarding), instant free confirmation with
+  QR code, boarding pass page, downloadable PDF itinerary.
 - **Dashboard** — upcoming/past/cancelled trips, booking detail, PDF download
-  (browser print), cancellation, profile editing, saved passengers and mock
-  saved payment methods.
+  (browser print), cancellation, profile editing, saved passengers.
 - **Admin panel** (`/admin`, admin role required) — analytics (Recharts),
-  flight CRUD, airline detail overrides, booking management, user role
-  management, promotions and discount codes.
+  flight CRUD with an editable ticket price field, airline detail overrides,
+  booking management, user role management, promotions and discount codes.
 - **Extras** — dark/light mode, mock flight status lookup, favorite
   destinations, recently searched routes, toast notifications, loading
   skeletons.
@@ -79,7 +97,7 @@ src/
   app/            Next.js App Router routes
   components/     UI components grouped by feature area
   context/        Auth context (Firebase/local-demo)
-  lib/data/       Mock airports, airlines, flight generator
+  lib/data/       Mock airports, airlines, flight generator, extras pricing
   lib/services/   Firestore/localStorage data access
   lib/store/      Zustand stores (booking draft, search history)
   lib/validation/ Zod schemas

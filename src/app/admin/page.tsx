@@ -82,7 +82,7 @@ export default function AdminOverviewPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={<Ticket size={18} />} label="Total bookings" value={String(bookings.length)} />
-        <StatCard icon={<Wallet size={18} />} label="Total revenue" value={formatCurrency(totalRevenue)} />
+        <StatCard icon={<Wallet size={18} />} label="Total ticket value" value={formatCurrency(totalRevenue)} />
         <StatCard icon={<UsersIcon size={18} />} label="Registered users" value={String(users.length)} />
         <StatCard
           icon={<TrendingUp size={18} />}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { CreditCard, Plus, Trash2, User2 } from "lucide-react";
+import { Plus, Trash2, User2 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { FieldError, Input, Label, Select } from "@/components/ui/input";
 import { nationalities } from "@/lib/data/nationalities";
 import { passengerSchema } from "@/lib/validation/passenger";
 import { z } from "zod";
-import type { PaymentMethodType, SavedPaymentMethod } from "@/types";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Enter your name"),
@@ -26,11 +25,9 @@ const savedPassengerSchema = passengerSchema.omit({ id: true, type: true });
 type SavedPassengerValues = z.infer<typeof savedPassengerSchema>;
 
 export default function ProfilePage() {
-  const { user, profile, loading, updateUserProfile, addSavedPassenger, removeSavedPassenger, addSavedPaymentMethod, removeSavedPaymentMethod } = useAuth();
+  const { user, profile, loading, updateUserProfile, addSavedPassenger, removeSavedPassenger } = useAuth();
   const router = useRouter();
   const [showPassengerForm, setShowPassengerForm] = useState(false);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [paymentType, setPaymentType] = useState<PaymentMethodType>("credit_card");
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth/login?next=/dashboard/profile");
@@ -68,20 +65,6 @@ export default function ProfilePage() {
     toast.success("Passenger saved");
     resetPassengerForm({ firstName: "", lastName: "", dateOfBirth: "", nationality: "", passportNumber: "", gender: "male", email: "", phone: "" });
     setShowPassengerForm(false);
-  }
-
-  function onAddPaymentMethod(formData: FormData) {
-    const label = String(formData.get("label") || "");
-    const last4 = String(formData.get("last4") || "");
-    const method: SavedPaymentMethod = {
-      id: `pm-${Date.now()}`,
-      type: paymentType,
-      label: label || (paymentType === "paypal" ? "PayPal account" : paymentType === "apple_pay" ? "Apple Pay" : paymentType === "google_pay" ? "Google Pay" : "Card"),
-      last4: last4 || undefined,
-    };
-    addSavedPaymentMethod(method);
-    toast.success("Payment method saved (mock)");
-    setShowPaymentForm(false);
   }
 
   return (
@@ -124,7 +107,7 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Card className="mb-6">
+      <Card>
         <CardHeader className="flex items-center justify-between pb-2">
           <h2 className="font-semibold">Saved passengers</h2>
           <Button size="sm" variant="outline" onClick={() => setShowPassengerForm((s) => !s)}>
@@ -189,51 +172,6 @@ export default function ProfilePage() {
               <div className="sm:col-span-2">
                 <Button type="submit" size="sm">Save passenger</Button>
               </div>
-            </form>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex items-center justify-between pb-2">
-          <h2 className="font-semibold">Saved payment methods</h2>
-          <Button size="sm" variant="outline" onClick={() => setShowPaymentForm((s) => !s)}>
-            <Plus size={14} /> Add
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {profile?.savedPaymentMethods.length === 0 && !showPaymentForm && (
-            <p className="text-sm text-foreground/50">No saved payment methods yet (mock only).</p>
-          )}
-          <div className="space-y-2">
-            {profile?.savedPaymentMethods.map((pm) => (
-              <div key={pm.id} className="flex items-center justify-between rounded-xl bg-black/[0.02] p-3 text-sm dark:bg-white/5">
-                <span className="flex items-center gap-2">
-                  <CreditCard size={15} className="text-foreground/50" />
-                  {pm.label} {pm.last4 && <span className="text-foreground/40">•••• {pm.last4}</span>}
-                </span>
-                <button onClick={() => removeSavedPaymentMethod(pm.id)} className="text-red-500 hover:text-red-600">
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {showPaymentForm && (
-            <form action={onAddPaymentMethod} className="mt-4 space-y-3 rounded-xl border border-black/8 p-4 dark:border-white/10">
-              <Select value={paymentType} onChange={(e) => setPaymentType(e.target.value as PaymentMethodType)}>
-                <option value="credit_card">Credit Card</option>
-                <option value="debit_card">Debit Card</option>
-                <option value="paypal">PayPal</option>
-                <option value="apple_pay">Apple Pay</option>
-                <option value="google_pay">Google Pay</option>
-              </Select>
-              <Input name="label" placeholder="Label (e.g. Personal Visa)" />
-              {(paymentType === "credit_card" || paymentType === "debit_card") && (
-                <Input name="last4" placeholder="Last 4 digits" maxLength={4} />
-              )}
-              <p className="text-xs text-foreground/40">Mock data only — no real card details are stored.</p>
-              <Button type="submit" size="sm">Save payment method</Button>
             </form>
           )}
         </CardContent>

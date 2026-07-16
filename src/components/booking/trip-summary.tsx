@@ -45,7 +45,7 @@ export function TripSummary({ extrasTotal = 0 }: { extrasTotal?: number }) {
             <span>{passengerCount}</span>
           </div>
           <div className="flex justify-between text-foreground/60">
-            <span>Fare subtotal</span>
+            <span>Ticket price</span>
             <span>{formatCurrency(flightsTotal)}</span>
           </div>
           {extrasTotal > 0 && (

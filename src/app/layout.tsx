@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SkyBook — Premium Flight Booking (Demo)",
   description:
-    "SkyBook is a premium flight-booking portfolio demo with mock airlines, fares, and a simulated checkout flow. No real bookings or payments are processed.",
+    "SkyBook is a premium flight-booking portfolio demo with mock airlines and fares, and a free simulated booking flow. No real bookings are processed.",
 };
 
 export default function RootLayout({

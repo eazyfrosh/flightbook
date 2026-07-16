@@ -4,11 +4,10 @@ import { cn } from "@/lib/utils";
 const steps = [
   { key: "passengers", label: "Passengers" },
   { key: "extras", label: "Extras" },
-  { key: "payment", label: "Payment" },
   { key: "confirmation", label: "Confirmation" },
 ];
 
-export function BookingSteps({ current }: { current: "passengers" | "extras" | "payment" | "confirmation" }) {
+export function BookingSteps({ current }: { current: "passengers" | "extras" | "confirmation" }) {
   const currentIdx = steps.findIndex((s) => s.key === current);
   return (
     <div className="mx-auto mb-8 flex max-w-2xl items-center">

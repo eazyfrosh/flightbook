@@ -109,7 +109,7 @@ export default function AdminFlightsPage() {
               <Input value={editing.destinationCode} onChange={(e) => setEditing({ ...editing, destinationCode: e.target.value })} placeholder="LHR" maxLength={3} />
             </div>
             <div>
-              <Label>Price (USD)</Label>
+              <Label>Ticket Price (USD)</Label>
               <Input type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })} />
             </div>
             <div>

@@ -20,7 +20,7 @@ import {
 } from "firebase/auth";
 import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
 import { getOne, upsert } from "@/lib/services/store";
-import type { PassengerInfo, SavedPaymentMethod, UserProfile } from "@/types";
+import type { PassengerInfo, UserProfile } from "@/types";
 
 interface DemoUserRecord {
   uid: string;
@@ -66,7 +66,6 @@ async function ensureDemoAdminSeed() {
     role: "admin",
     createdAt: new Date().toISOString(),
     savedPassengers: [],
-    savedPaymentMethods: [],
     favoriteDestinations: [],
   });
 }
@@ -85,8 +84,6 @@ interface AuthContextValue {
   updateUserProfile: (partial: Partial<UserProfile>) => Promise<void>;
   addSavedPassenger: (passenger: PassengerInfo) => Promise<void>;
   removeSavedPassenger: (id: string) => Promise<void>;
-  addSavedPaymentMethod: (method: SavedPaymentMethod) => Promise<void>;
-  removeSavedPaymentMethod: (id: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -100,7 +97,6 @@ function makeProfile(uid: string, email: string, displayName: string): UserProfi
     role: "user",
     createdAt: new Date().toISOString(),
     savedPassengers: [],
-    savedPaymentMethods: [],
     favoriteDestinations: [],
   };
 }
@@ -286,28 +282,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [profile, persistProfile]
   );
 
-  const addSavedPaymentMethod = useCallback(
-    async (method: SavedPaymentMethod) => {
-      if (!profile) return;
-      await persistProfile({
-        ...profile,
-        savedPaymentMethods: [...profile.savedPaymentMethods, method],
-      });
-    },
-    [profile, persistProfile]
-  );
-
-  const removeSavedPaymentMethod = useCallback(
-    async (id: string) => {
-      if (!profile) return;
-      await persistProfile({
-        ...profile,
-        savedPaymentMethods: profile.savedPaymentMethods.filter((p) => p.id !== id),
-      });
-    },
-    [profile, persistProfile]
-  );
-
   const value = useMemo(
     () => ({
       user,
@@ -323,8 +297,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateUserProfile,
       addSavedPassenger,
       removeSavedPassenger,
-      addSavedPaymentMethod,
-      removeSavedPaymentMethod,
     }),
     [
       user,
@@ -340,8 +312,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateUserProfile,
       addSavedPassenger,
       removeSavedPassenger,
-      addSavedPaymentMethod,
-      removeSavedPaymentMethod,
     ]
   );
 

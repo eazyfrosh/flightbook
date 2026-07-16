@@ -7,7 +7,6 @@ import type {
   Flight,
   FlightSearchParams,
   PassengerInfo,
-  PaymentMethodType,
 } from "@/types";
 
 interface BookingState {
@@ -15,13 +14,11 @@ interface BookingState {
   itinerary: Flight[];
   passengers: PassengerInfo[];
   extras: ExtrasSelection;
-  paymentMethod: PaymentMethodType | null;
   setSearchParams: (params: FlightSearchParams) => void;
   setItineraryLeg: (legIndex: number, flight: Flight) => void;
   clearItinerary: () => void;
   setPassengers: (passengers: PassengerInfo[]) => void;
   setExtras: (extras: ExtrasSelection) => void;
-  setPaymentMethod: (method: PaymentMethodType) => void;
   reset: () => void;
 }
 
@@ -40,7 +37,6 @@ export const useBookingStore = create<BookingState>()(
       itinerary: [],
       passengers: [],
       extras: defaultExtras,
-      paymentMethod: null,
       setSearchParams: (params) => set({ searchParams: params }),
       setItineraryLeg: (legIndex, flight) => {
         const itinerary = [...get().itinerary];
@@ -50,13 +46,11 @@ export const useBookingStore = create<BookingState>()(
       clearItinerary: () => set({ itinerary: [] }),
       setPassengers: (passengers) => set({ passengers }),
       setExtras: (extras) => set({ extras }),
-      setPaymentMethod: (method) => set({ paymentMethod: method }),
       reset: () =>
         set({
           itinerary: [],
           passengers: [],
           extras: defaultExtras,
-          paymentMethod: null,
         }),
     }),
     { name: "skybook-booking-draft" }

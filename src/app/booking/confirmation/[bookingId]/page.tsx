@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { QRCodeImage } from "@/components/booking/qr-code";
 import { DownloadPdfButton } from "@/components/booking/download-pdf-button";
 import { getBooking } from "@/lib/services/bookings";
+import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
 import type { Booking } from "@/types";
 
@@ -35,6 +36,8 @@ export default function ConfirmationPage() {
       </div>
     );
   }
+
+  const extraLineItems = extrasLineItems(booking.extras);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -94,26 +97,51 @@ export default function ConfirmationPage() {
 
       <Card className="mb-6">
         <CardContent className="p-5">
-          <h3 className="mb-3 font-semibold">Passengers</h3>
+          <h3 className="mb-3 font-semibold">Passenger details</h3>
           <ul className="space-y-1.5 text-sm text-foreground/70">
             {booking.passengers.map((p) => (
               <li key={p.id}>
-                {p.firstName} {p.lastName} <span className="text-foreground/40">· {p.type}</span>
+                {p.firstName} {p.lastName} <span className="text-foreground/40">· {p.type} · {p.nationality}</span>
               </li>
             ))}
           </ul>
           {booking.seatAssignment && (
-            <p className="mt-3 text-sm text-foreground/60">Seat: <strong>{booking.seatAssignment}</strong></p>
+            <p className="mt-3 text-sm text-foreground/60">Seat number: <strong>{booking.seatAssignment}</strong></p>
           )}
-          <div className="mt-4 flex justify-between border-t border-black/8 pt-3 text-base font-bold dark:border-white/10">
-            <span>Total paid</span>
-            <span className="text-brand-700 dark:text-brand-400">{formatCurrency(booking.totalPrice, booking.currency)}</span>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardContent className="p-5">
+          <h3 className="mb-3 font-semibold">Extras</h3>
+          {extraLineItems.length === 0 ? (
+            <p className="text-sm text-foreground/50">No extras selected.</p>
+          ) : (
+            <ul className="space-y-1.5 text-sm text-foreground/70">
+              {extraLineItems.map((item) => (
+                <li key={item.label} className="flex justify-between">
+                  <span>{item.label}</span>
+                  {item.price > 0 && <span>{formatCurrency(item.price, booking.currency)}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="mt-4 space-y-1.5 border-t border-black/8 pt-3 text-sm dark:border-white/10">
+            <div className="flex justify-between text-foreground/60">
+              <span>Ticket price</span>
+              <span>{formatCurrency(booking.ticketPrice, booking.currency)}</span>
+            </div>
+            <div className="flex justify-between border-t border-black/8 pt-1.5 text-base font-bold dark:border-white/10">
+              <span>Total</span>
+              <span className="text-brand-700 dark:text-brand-400">{formatCurrency(booking.totalPrice, booking.currency)}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="flex flex-wrap justify-center gap-3">
-        <DownloadPdfButton label="Download confirmation (PDF)" />
+        <DownloadPdfButton label="Download PDF itinerary" />
         <Link href={`/boarding-pass/${booking.id}`}>
           <Button variant="secondary">
             <Ticket size={16} /> View boarding pass

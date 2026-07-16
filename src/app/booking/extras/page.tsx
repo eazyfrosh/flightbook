@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Luggage, Shield, Sparkles, Utensils } from "lucide-react";
+import { toast } from "sonner";
+import { CheckCircle2, Luggage, Shield, Sparkles, Utensils } from "lucide-react";
 import { BookingSteps } from "@/components/booking/booking-steps";
 import { TripSummary } from "@/components/booking/trip-summary";
 import { SeatMap } from "@/components/booking/seat-map";
@@ -10,12 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
 import { useBookingStore } from "@/lib/store/booking-store";
 import { useBookingHydrated } from "@/lib/store/use-hydrated";
+import { useAuth } from "@/context/auth-context";
+import { createBooking } from "@/lib/services/bookings";
 import { MEAL_OPTIONS } from "@/lib/data/flights";
-import { formatCurrency } from "@/lib/utils";
-
-const EXTRA_BAGGAGE_PRICE = 45;
-const INSURANCE_PRICE = 29;
-const PRIORITY_PRICE = 19;
+import { EXTRA_BAGGAGE_PRICE, INSURANCE_PRICE, PRIORITY_PRICE, computeExtrasTotal } from "@/lib/data/extras-pricing";
+import { formatCurrency, generateBookingReference } from "@/lib/utils";
+import type { Booking } from "@/types";
 
 export default function ExtrasPage() {
   const hydrated = useBookingHydrated();
@@ -25,22 +26,51 @@ export default function ExtrasPage() {
 
 function ExtrasForm() {
   const router = useRouter();
-  const { itinerary, extras, setExtras } = useBookingStore();
-  const [local, setLocal] = useState(extras);
+  const { itinerary, extras, setExtras, passengers, searchParams, reset } = useBookingStore();
+  const { user } = useAuth();
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     if (itinerary.filter(Boolean).length === 0) router.replace("/search");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const extrasTotal =
-    (local.extraBaggage ? EXTRA_BAGGAGE_PRICE : 0) +
-    (local.travelInsurance ? INSURANCE_PRICE : 0) +
-    (local.priorityBoarding ? PRIORITY_PRICE : 0);
+  const extrasTotal = computeExtrasTotal(extras);
 
-  function continueToPayment() {
-    setExtras(local);
-    router.push("/booking/payment");
+  async function handleConfirm() {
+    if (!user) {
+      router.push("/auth/login?next=/booking/extras");
+      return;
+    }
+
+    setConfirming(true);
+    await new Promise((resolve) => setTimeout(resolve, 900));
+
+    const passengerCount = searchParams
+      ? searchParams.passengers.adults + searchParams.passengers.children + searchParams.passengers.infants
+      : passengers.length || 1;
+    const ticketPrice = itinerary.reduce((sum, f) => sum + (f ? f.price : 0), 0) * Math.max(1, passengerCount);
+
+    const booking: Booking = {
+      id: `bk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      bookingReference: generateBookingReference(),
+      userId: user.uid,
+      flights: itinerary.filter(Boolean),
+      passengers,
+      extras,
+      ticketPrice,
+      totalPrice: ticketPrice + extrasTotal,
+      currency: "USD",
+      status: "confirmed",
+      createdAt: new Date().toISOString(),
+      seatAssignment: extras.seatSelection,
+    };
+
+    await createBooking(booking);
+    setConfirming(false);
+    reset();
+    toast.success("Booking confirmed!");
+    router.push(`/booking/confirmation/${booking.id}`);
   }
 
   if (itinerary.filter(Boolean).length === 0) return null;
@@ -64,8 +94,8 @@ function ExtrasForm() {
             {primaryFlight && (
               <SeatMap
                 flightId={primaryFlight.id}
-                value={local.seatSelection}
-                onChange={(seat) => setLocal((l) => ({ ...l, seatSelection: seat }))}
+                value={extras.seatSelection}
+                onChange={(seat) => setExtras({ ...extras, seatSelection: seat })}
               />
             )}
           </section>
@@ -76,8 +106,8 @@ function ExtrasForm() {
               <h2 className="font-semibold">Meal preference</h2>
             </div>
             <Select
-              value={local.meal ?? "none"}
-              onChange={(e) => setLocal((l) => ({ ...l, meal: e.target.value === "none" ? null : e.target.value }))}
+              value={extras.meal ?? "none"}
+              onChange={(e) => setExtras({ ...extras, meal: e.target.value === "none" ? null : e.target.value })}
             >
               {MEAL_OPTIONS.map((m) => (
                 <option key={m} value={m}>
@@ -100,8 +130,8 @@ function ExtrasForm() {
                 <span className="text-sm font-semibold">{formatCurrency(EXTRA_BAGGAGE_PRICE)}</span>
                 <input
                   type="checkbox"
-                  checked={local.extraBaggage}
-                  onChange={(e) => setLocal((l) => ({ ...l, extraBaggage: e.target.checked }))}
+                  checked={extras.extraBaggage}
+                  onChange={(e) => setExtras({ ...extras, extraBaggage: e.target.checked })}
                   className="h-5 w-5 rounded accent-brand-600"
                 />
               </span>
@@ -119,8 +149,8 @@ function ExtrasForm() {
                 <span className="text-sm font-semibold">{formatCurrency(INSURANCE_PRICE)}</span>
                 <input
                   type="checkbox"
-                  checked={local.travelInsurance}
-                  onChange={(e) => setLocal((l) => ({ ...l, travelInsurance: e.target.checked }))}
+                  checked={extras.travelInsurance}
+                  onChange={(e) => setExtras({ ...extras, travelInsurance: e.target.checked })}
                   className="h-5 w-5 rounded accent-brand-600"
                 />
               </span>
@@ -138,8 +168,8 @@ function ExtrasForm() {
                 <span className="text-sm font-semibold">{formatCurrency(PRIORITY_PRICE)}</span>
                 <input
                   type="checkbox"
-                  checked={local.priorityBoarding}
-                  onChange={(e) => setLocal((l) => ({ ...l, priorityBoarding: e.target.checked }))}
+                  checked={extras.priorityBoarding}
+                  onChange={(e) => setExtras({ ...extras, priorityBoarding: e.target.checked })}
                   className="h-5 w-5 rounded accent-brand-600"
                 />
               </span>
@@ -147,8 +177,14 @@ function ExtrasForm() {
           </section>
 
           <div className="flex justify-end">
-            <Button size="lg" onClick={continueToPayment}>
-              Continue to payment <ArrowRight size={17} />
+            <Button size="lg" onClick={handleConfirm} disabled={confirming}>
+              {confirming ? (
+                "Confirming booking…"
+              ) : (
+                <>
+                  <CheckCircle2 size={17} /> Confirm booking
+                </>
+              )}
             </Button>
           </div>
         </div>

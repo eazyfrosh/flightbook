@@ -89,21 +89,6 @@ export interface ExtrasSelection {
   priorityBoarding: boolean;
 }
 
-export type PaymentMethodType =
-  | "credit_card"
-  | "debit_card"
-  | "paypal"
-  | "apple_pay"
-  | "google_pay";
-
-export interface SavedPaymentMethod {
-  id: string;
-  type: PaymentMethodType;
-  label: string;
-  last4?: string;
-  expiry?: string;
-}
-
 export type BookingStatus = "confirmed" | "cancelled" | "completed";
 
 export interface Booking {
@@ -113,11 +98,11 @@ export interface Booking {
   flights: Flight[];
   passengers: PassengerInfo[];
   extras: ExtrasSelection;
+  ticketPrice: number;
   totalPrice: number;
   currency: string;
   status: BookingStatus;
   createdAt: string;
-  paymentMethod: PaymentMethodType;
   seatAssignment: string | null;
 }
 
@@ -133,7 +118,6 @@ export interface UserProfile {
   nationality?: string;
   createdAt: string;
   savedPassengers: PassengerInfo[];
-  savedPaymentMethods: SavedPaymentMethod[];
   favoriteDestinations: string[];
 }
 
