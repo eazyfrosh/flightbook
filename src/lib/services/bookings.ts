@@ -30,3 +30,20 @@ export function deleteBooking(id: string) {
 export function cancelBooking(booking: Booking) {
   return upsert(COLLECTION, { ...booking, status: "cancelled" as const });
 }
+
+export async function findBookingByReferenceAndName(
+  reference: string,
+  lastName: string
+): Promise<Booking | null> {
+  const ref = reference.trim().toUpperCase();
+  const name = lastName.trim().toLowerCase();
+  if (!ref || !name) return null;
+  const all = await getAllBookings();
+  return (
+    all.find(
+      (b) =>
+        b.bookingReference.toUpperCase() === ref &&
+        b.passengers.some((p) => p.lastName.trim().toLowerCase() === name)
+    ) ?? null
+  );
+}

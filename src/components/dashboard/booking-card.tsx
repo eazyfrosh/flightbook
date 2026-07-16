@@ -1,12 +1,18 @@
 import Link from "next/link";
-import { Ticket } from "lucide-react";
+import { CalendarClock, Ticket } from "lucide-react";
 import type { Booking } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AirlineLogo } from "@/components/ui/airline-logo";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
 
-export function BookingCard({ booking, onCancel }: { booking: Booking; onCancel?: (booking: Booking) => void }) {
+interface BookingCardProps {
+  booking: Booking;
+  onCancel?: (booking: Booking) => void;
+  onRebook?: (booking: Booking) => void;
+}
+
+export function BookingCard({ booking, onCancel, onRebook }: BookingCardProps) {
   const flight = booking.flights[0];
   const first = flight.segments[0];
   const last = flight.segments[flight.segments.length - 1];
@@ -29,6 +35,7 @@ export function BookingCard({ booking, onCancel }: { booking: Booking; onCancel?
           <Badge tone={booking.status === "confirmed" ? "green" : booking.status === "cancelled" ? "red" : "neutral"}>
             {booking.status}
           </Badge>
+          {booking.rebookedAt && <Badge tone="gold">Rebooked</Badge>}
         </div>
       </div>
 
@@ -47,6 +54,11 @@ export function BookingCard({ booking, onCancel }: { booking: Booking; onCancel?
             <Link href={`/boarding-pass/${booking.id}`}>
               <Button size="sm" variant="secondary"><Ticket size={13} /> Boarding pass</Button>
             </Link>
+          )}
+          {booking.status === "confirmed" && onRebook && (
+            <Button size="sm" variant="outline" onClick={() => onRebook(booking)}>
+              <CalendarClock size={13} /> Rebook
+            </Button>
           )}
           {booking.status === "confirmed" && onCancel && (
             <Button size="sm" variant="danger" onClick={() => onCancel(booking)}>

@@ -11,6 +11,7 @@ import { useAuth } from "@/context/auth-context";
 const navLinks = [
   { href: "/search", label: "Search Flights" },
   { href: "/flight-status", label: "Flight Status" },
+  { href: "/manage-booking", label: "Manage Booking" },
   { href: "/deals", label: "Deals" },
 ];
 
@@ -60,7 +61,7 @@ export function Header() {
               </button>
               <div className="invisible absolute right-0 mt-1 w-52 translate-y-1 rounded-xl border border-black/8 bg-white p-1.5 opacity-0 shadow-xl transition-all group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 dark:border-white/10 dark:bg-neutral-900">
                 <Link href="/dashboard" className="block rounded-lg px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10">
-                  Dashboard
+                  My Trips
                 </Link>
                 <Link href="/dashboard/profile" className="block rounded-lg px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10">
                   Profile
@@ -121,7 +122,7 @@ export function Header() {
             {user ? (
               <>
                 <Link href="/dashboard" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
-                  Dashboard
+                  My Trips
                 </Link>
                 {profile?.role === "admin" && (
                   <Link href="/admin" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">

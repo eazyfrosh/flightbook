@@ -9,6 +9,7 @@ import { useAuth } from "@/context/auth-context";
 import { getUserBookings, cancelBooking } from "@/lib/services/bookings";
 import { BookingCard } from "@/components/dashboard/booking-card";
 import { Button } from "@/components/ui/button";
+import { startRebooking } from "@/lib/booking/rebooking";
 import type { Booking } from "@/types";
 
 type Tab = "upcoming" | "past" | "cancelled";
@@ -55,12 +56,18 @@ export default function DashboardPage() {
     load();
   }
 
+  function handleRebook(booking: Booking) {
+    router.push(startRebooking(booking));
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Welcome, {profile?.displayName || user.displayName || "traveler"}</h1>
-          <p className="mt-1 text-sm text-foreground/60">Manage your bookings and profile</p>
+          <h1 className="text-2xl font-bold">My Trips</h1>
+          <p className="mt-1 text-sm text-foreground/60">
+            Welcome back, {profile?.displayName || user.displayName || "traveler"} — manage your bookings and profile
+          </p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/profile">
@@ -104,7 +111,12 @@ export default function DashboardPage() {
       ) : (
         <div className="space-y-4">
           {shown.map((booking) => (
-            <BookingCard key={booking.id} booking={booking} onCancel={tab === "upcoming" ? handleCancel : undefined} />
+            <BookingCard
+              key={booking.id}
+              booking={booking}
+              onCancel={tab === "upcoming" ? handleCancel : undefined}
+              onRebook={tab === "upcoming" ? handleRebook : undefined}
+            />
           ))}
         </div>
       )}

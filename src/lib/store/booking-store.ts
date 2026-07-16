@@ -14,11 +14,13 @@ interface BookingState {
   itinerary: Flight[];
   passengers: PassengerInfo[];
   extras: ExtrasSelection;
+  rebookingBookingId: string | null;
   setSearchParams: (params: FlightSearchParams) => void;
   setItineraryLeg: (legIndex: number, flight: Flight) => void;
   clearItinerary: () => void;
   setPassengers: (passengers: PassengerInfo[]) => void;
   setExtras: (extras: ExtrasSelection) => void;
+  startRebooking: (bookingId: string, passengers: PassengerInfo[], extras: ExtrasSelection) => void;
   reset: () => void;
 }
 
@@ -37,6 +39,7 @@ export const useBookingStore = create<BookingState>()(
       itinerary: [],
       passengers: [],
       extras: defaultExtras,
+      rebookingBookingId: null,
       setSearchParams: (params) => set({ searchParams: params }),
       setItineraryLeg: (legIndex, flight) => {
         const itinerary = [...get().itinerary];
@@ -46,11 +49,14 @@ export const useBookingStore = create<BookingState>()(
       clearItinerary: () => set({ itinerary: [] }),
       setPassengers: (passengers) => set({ passengers }),
       setExtras: (extras) => set({ extras }),
+      startRebooking: (bookingId, passengers, extras) =>
+        set({ rebookingBookingId: bookingId, passengers, extras, itinerary: [] }),
       reset: () =>
         set({
           itinerary: [],
           passengers: [],
           extras: defaultExtras,
+          rebookingBookingId: null,
         }),
     }),
     { name: "skybook-booking-draft" }

@@ -7,12 +7,13 @@ import { CheckCircle2, Luggage, Shield, Sparkles, Utensils } from "lucide-react"
 import { BookingSteps } from "@/components/booking/booking-steps";
 import { TripSummary } from "@/components/booking/trip-summary";
 import { SeatMap } from "@/components/booking/seat-map";
+import { RebookingBanner } from "@/components/booking/rebooking-banner";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
 import { useBookingStore } from "@/lib/store/booking-store";
 import { useBookingHydrated } from "@/lib/store/use-hydrated";
 import { useAuth } from "@/context/auth-context";
-import { createBooking } from "@/lib/services/bookings";
+import { createBooking, getBooking, updateBooking } from "@/lib/services/bookings";
 import { MEAL_OPTIONS } from "@/lib/data/flights";
 import { EXTRA_BAGGAGE_PRICE, INSURANCE_PRICE, PRIORITY_PRICE, computeExtrasTotal } from "@/lib/data/extras-pricing";
 import { formatCurrency, generateBookingReference } from "@/lib/utils";
@@ -26,7 +27,7 @@ export default function ExtrasPage() {
 
 function ExtrasForm() {
   const router = useRouter();
-  const { itinerary, extras, setExtras, passengers, searchParams, reset } = useBookingStore();
+  const { itinerary, extras, setExtras, passengers, searchParams, rebookingBookingId, reset } = useBookingStore();
   const { user } = useAuth();
   const [confirming, setConfirming] = useState(false);
 
@@ -50,6 +51,32 @@ function ExtrasForm() {
       ? searchParams.passengers.adults + searchParams.passengers.children + searchParams.passengers.infants
       : passengers.length || 1;
     const ticketPrice = itinerary.reduce((sum, f) => sum + (f ? f.price : 0), 0) * Math.max(1, passengerCount);
+
+    if (rebookingBookingId) {
+      const existing = await getBooking(rebookingBookingId);
+      if (!existing) {
+        setConfirming(false);
+        toast.error("The original booking could not be found.");
+        return;
+      }
+      const rebooked: Booking = {
+        ...existing,
+        flights: itinerary.filter(Boolean),
+        passengers,
+        extras,
+        ticketPrice,
+        totalPrice: ticketPrice + extrasTotal,
+        status: "confirmed",
+        rebookedAt: new Date().toISOString(),
+        seatAssignment: extras.seatSelection,
+      };
+      await updateBooking(rebooked);
+      setConfirming(false);
+      reset();
+      toast.success("Booking rebooked successfully!");
+      router.push(`/booking/confirmation/${rebooked.id}`);
+      return;
+    }
 
     const booking: Booking = {
       id: `bk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -79,6 +106,7 @@ function ExtrasForm() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <BookingSteps current="extras" />
+      <RebookingBanner />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           <div>
@@ -179,10 +207,10 @@ function ExtrasForm() {
           <div className="flex justify-end">
             <Button size="lg" onClick={handleConfirm} disabled={confirming}>
               {confirming ? (
-                "Confirming booking…"
+                rebookingBookingId ? "Rebooking…" : "Confirming booking…"
               ) : (
                 <>
-                  <CheckCircle2 size={17} /> Confirm booking
+                  <CheckCircle2 size={17} /> {rebookingBookingId ? "Confirm rebooking" : "Confirm booking"}
                 </>
               )}
             </Button>

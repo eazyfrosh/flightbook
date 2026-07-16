@@ -20,6 +20,23 @@ function gateFor(flightId: string) {
   return `${letters[sum % letters.length]}${(sum % 30) + 1}`;
 }
 
+function boardingGroupFor(flightId: string) {
+  const sum = flightId.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  return `${"ABC"[sum % 3]}${(sum % 6) + 1}`;
+}
+
+function BarcodeStrip({ seed }: { seed: string }) {
+  const sum = seed.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const bars = Array.from({ length: 34 }, (_, i) => (((sum * (i + 7)) % 5) + 1) * 2);
+  return (
+    <div className="flex h-10 items-stretch gap-[2px]" aria-hidden>
+      {bars.map((w, i) => (
+        <span key={i} className="bg-foreground" style={{ width: w }} />
+      ))}
+    </div>
+  );
+}
+
 export default function BoardingPassPage() {
   const { bookingId } = useParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<Booking | null | undefined>(undefined);
@@ -73,7 +90,7 @@ export default function BoardingPassPage() {
           <Plane size={22} className="opacity-70" />
         </div>
 
-        <div className="grid grid-cols-3 gap-4 p-6">
+        <div className="grid grid-cols-2 gap-4 p-6 sm:grid-cols-4">
           <div>
             <p className="text-xs text-foreground/50">Passenger</p>
             <p className="font-semibold">{passenger?.firstName} {passenger?.lastName}</p>
@@ -85,6 +102,10 @@ export default function BoardingPassPage() {
           <div>
             <p className="text-xs text-foreground/50">Seat</p>
             <p className="font-semibold">{booking.seatAssignment ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-foreground/50">Group / Zone</p>
+            <p className="font-semibold">{boardingGroupFor(flight.id)}</p>
           </div>
         </div>
 
@@ -100,27 +121,37 @@ export default function BoardingPassPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 border-t border-dashed border-black/15 p-6 dark:border-white/15">
-          <div>
-            <p className="text-xs text-foreground/50">Date</p>
-            <p className="text-sm font-medium">{formatDateLong(first.departureTime)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-foreground/50">Boarding</p>
-            <p className="text-sm font-medium">{boardingTime(first.departureTime)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-foreground/50">Gate</p>
-            <p className="text-sm font-medium">{gateFor(flight.id)}</p>
+        <div className="relative border-t-2 border-dashed border-black/15 dark:border-white/15">
+          <span className="absolute left-0 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background" />
+          <span className="absolute right-0 top-1/2 h-6 w-6 -translate-y-1/2 translate-x-1/2 rounded-full bg-background" />
+          <div className="grid grid-cols-3 gap-4 p-6">
+            <div>
+              <p className="text-xs text-foreground/50">Date</p>
+              <p className="text-sm font-medium">{formatDateLong(first.departureTime)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-foreground/50">Boarding</p>
+              <p className="text-sm font-medium">{boardingTime(first.departureTime)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-foreground/50">Gate</p>
+              <p className="text-sm font-medium">{gateFor(flight.id)}</p>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between bg-black/[0.02] p-6 dark:bg-white/5">
-          <div>
-            <p className="text-xs text-foreground/50">Booking reference</p>
-            <p className="font-mono text-lg font-bold tracking-widest">{booking.bookingReference}</p>
+        <div className="space-y-4 bg-black/[0.02] p-6 dark:bg-white/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-foreground/50">Booking reference</p>
+              <p className="font-mono text-lg font-bold tracking-widest">{booking.bookingReference}</p>
+            </div>
+            <QRCodeImage value={`SKYBOOK|${booking.bookingReference}|${flight.id}`} size={100} />
           </div>
-          <QRCodeImage value={`SKYBOOK|${booking.bookingReference}|${flight.id}`} size={100} />
+          <div>
+            <BarcodeStrip seed={`${booking.bookingReference}-${flight.id}`} />
+            <p className="mt-1 text-center text-[10px] uppercase tracking-widest text-foreground/40">Scan at gate</p>
+          </div>
         </div>
       </div>
 

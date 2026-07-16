@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Ticket } from "lucide-react";
+import { CalendarClock, Mail, Ticket } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { getBooking, cancelBooking } from "@/lib/services/bookings";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DownloadPdfButton } from "@/components/booking/download-pdf-button";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
+import { startRebooking } from "@/lib/booking/rebooking";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
 import type { Booking } from "@/types";
 
@@ -49,7 +50,14 @@ export default function BookingDetailPage() {
     toast.success("Booking cancelled");
   }
 
+  function handleRebook() {
+    if (!booking) return;
+    router.push(startRebooking(booking));
+  }
+
   const extraLineItems = extrasLineItems(booking.extras);
+  const isUpcoming =
+    booking.status === "confirmed" && new Date(booking.flights[0].segments[0].departureTime).getTime() >= Date.now();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -66,6 +74,14 @@ export default function BookingDetailPage() {
             <Link href={`/boarding-pass/${booking.id}`}>
               <Button variant="secondary"><Ticket size={15} /> Boarding pass</Button>
             </Link>
+          )}
+          <Link href={`/booking/confirmation/${booking.id}/email-preview`}>
+            <Button variant="outline"><Mail size={15} /> Preview email</Button>
+          </Link>
+          {isUpcoming && (
+            <Button variant="outline" onClick={handleRebook}>
+              <CalendarClock size={15} /> Rebook flight
+            </Button>
           )}
           {booking.status === "confirmed" && (
             <Button variant="danger" onClick={handleCancel}>Cancel booking</Button>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, PlaneTakeoff, Ticket } from "lucide-react";
+import { CheckCircle2, Mail, PlaneTakeoff, Ticket } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ export default function ConfirmationPage() {
   }
 
   const extraLineItems = extrasLineItems(booking.extras);
+  const justRebooked = booking.rebookedAt && Date.now() - new Date(booking.rebookedAt).getTime() < 5 * 60 * 1000;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -45,7 +46,9 @@ export default function ConfirmationPage() {
         <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
           <CheckCircle2 size={32} />
         </span>
-        <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Booking confirmed!</h1>
+        <h1 className="mt-4 text-2xl font-bold sm:text-3xl">
+          {justRebooked ? "Booking rebooked!" : "Booking confirmed!"}
+        </h1>
         <p className="mt-1 text-foreground/60">
           A confirmation has been simulated for <strong>{booking.passengers[0]?.email}</strong>. This is a demo — no real email is sent.
         </p>
@@ -58,7 +61,10 @@ export default function ConfirmationPage() {
             <p className="text-3xl font-bold tracking-widest text-brand-700 dark:text-brand-400">
               {booking.bookingReference}
             </p>
-            <Badge tone="green" className="mt-2">{booking.status}</Badge>
+            <div className="mt-2 flex items-center justify-center gap-2 sm:justify-start">
+              <Badge tone="green">{booking.status}</Badge>
+              {booking.rebookedAt && <Badge tone="gold">Rebooked</Badge>}
+            </div>
           </div>
           <QRCodeImage value={`SKYBOOK|${booking.bookingReference}|${booking.id}`} />
         </CardContent>
@@ -145,6 +151,11 @@ export default function ConfirmationPage() {
         <Link href={`/boarding-pass/${booking.id}`}>
           <Button variant="secondary">
             <Ticket size={16} /> View boarding pass
+          </Button>
+        </Link>
+        <Link href={`/booking/confirmation/${booking.id}/email-preview`}>
+          <Button variant="outline">
+            <Mail size={16} /> Preview confirmation email
           </Button>
         </Link>
         <Link href="/dashboard">

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PlaneLanding, PlaneTakeoff } from "lucide-react";
 import { searchAirports, findAirport } from "@/lib/data/airports";
+import { countryFlag } from "@/lib/data/country-flags";
 import { cn } from "@/lib/utils";
 
 interface AirportAutocompleteProps {
@@ -47,6 +48,7 @@ export function AirportAutocomplete({ label, value, onChange, icon = "from", pla
           {selected ? (
             <>
               <span className="block truncate text-sm font-semibold">
+                <span aria-hidden className="mr-1">{countryFlag(selected.country)}</span>
                 {selected.city} ({selected.code})
               </span>
               <span className="block truncate text-xs text-foreground/50">{selected.name}</span>
@@ -86,6 +88,7 @@ export function AirportAutocomplete({ label, value, onChange, icon = "from", pla
               >
                 <span className="min-w-0">
                   <span className="block truncate font-medium">
+                    <span aria-hidden className="mr-1">{countryFlag(airport.country)}</span>
                     {airport.city}, {airport.country}
                   </span>
                   <span className="block truncate text-xs text-foreground/50">{airport.name}</span>

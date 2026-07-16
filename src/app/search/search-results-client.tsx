@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, ArrowRight, SlidersHorizontal } from "lucide-react";
+import { countryFlag } from "@/lib/data/country-flags";
 import { generateFlights } from "@/lib/data/flights";
 import { findAirport } from "@/lib/data/airports";
 import type { CabinClass, Flight, PassengerCounts, TripType } from "@/types";
@@ -12,6 +13,7 @@ import { SortBar, type SortKey } from "@/components/results/sort-bar";
 import { FlightCardSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useBookingStore } from "@/lib/store/booking-store";
+import { RebookingBanner } from "@/components/booking/rebooking-banner";
 import { formatCurrency, formatDateLong } from "@/lib/utils";
 import { useEffect } from "react";
 
@@ -168,9 +170,12 @@ export function SearchResultsClient() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <RebookingBanner />
       <div className="mb-6">
         <h1 className="text-2xl font-bold">
-          {originAirport.city} <ArrowRight className="inline" size={18} /> {destinationAirport.city}
+          <span aria-hidden>{countryFlag(originAirport.country)}</span> {originAirport.city}{" "}
+          <ArrowRight className="inline" size={18} /> <span aria-hidden>{countryFlag(destinationAirport.country)}</span>{" "}
+          {destinationAirport.city}
         </h1>
         <p className="mt-1 text-sm text-foreground/60">
           {formatDateLong(`${currentLeg.date}T00:00:00`)} · {passengers.adults + passengers.children + passengers.infants} passenger

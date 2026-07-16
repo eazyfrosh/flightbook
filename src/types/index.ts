@@ -103,6 +103,7 @@ export interface Booking {
   currency: string;
   status: BookingStatus;
   createdAt: string;
+  rebookedAt?: string;
   seatAssignment: string | null;
 }
 

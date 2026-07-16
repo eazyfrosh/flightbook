@@ -77,18 +77,29 @@ payment method is ever collected. The Booking Confirmation page shows:
   classes), popular destinations, recent searches, promotions, featured airlines.
 - **Search results** — mock flight generator, filters (stops, airline, price,
   departure/arrival window, refundable), sorting, per-leg selection for
-  round-trip/multi-city.
-- **Booking flow** — passenger info (React Hook Form + Zod), extras (seat map,
-  meal, baggage, insurance, priority boarding), instant free confirmation with
-  QR code, boarding pass page, downloadable PDF itinerary.
-- **Dashboard** — upcoming/past/cancelled trips, booking detail, PDF download
-  (browser print), cancellation, profile editing, saved passengers.
+  round-trip/multi-city. Airport autocomplete shows country flags.
+- **Booking flow** — passenger info (React Hook Form + Zod), extras (interactive
+  seat map with available/unavailable/extra-legroom seats, meal, baggage,
+  insurance, priority boarding), instant free confirmation with QR code,
+  boarding pass page, downloadable PDF itinerary, and an email-style preview
+  of what the confirmation email would look like.
+- **My Trips** (`/dashboard`) — upcoming/past/cancelled trips, booking detail,
+  PDF download (browser print), cancellation, rebooking, profile editing,
+  saved passengers.
+- **Manage Booking** (`/manage-booking`) — public, no-sign-in lookup by
+  booking reference + passenger last name (like a real airline's "manage my
+  booking"), with the same view/cancel/rebook actions as the dashboard.
+- **Rebooking (demo)** — from My Trips, the booking detail page, or Manage
+  Booking, "Rebook flight" lets you pick a new flight for an upcoming
+  booking; the existing booking is updated in place (same reference) rather
+  than creating a new one, and is marked "Rebooked".
+- **Flight status** (`/flight-status`) — mock live status lookup by flight
+  number and date (scheduled/boarding/departed/landed/delayed/cancelled).
 - **Admin panel** (`/admin`, admin role required) — analytics (Recharts),
   flight CRUD with an editable ticket price field, airline detail overrides,
   booking management, user role management, promotions and discount codes.
-- **Extras** — dark/light mode, mock flight status lookup, favorite
-  destinations, recently searched routes, toast notifications, loading
-  skeletons.
+- **Extras** — dark/light mode, favorite destinations, recently searched
+  routes, toast notifications, loading skeletons.
 
 ## Project structure
 

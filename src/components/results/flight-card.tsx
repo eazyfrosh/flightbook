@@ -5,6 +5,8 @@ import type { Flight } from "@/types";
 import { AirlineLogo } from "@/components/ui/airline-logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { findAirport } from "@/lib/data/airports";
+import { countryFlag } from "@/lib/data/country-flags";
 import { cabinLabel, formatCurrency, formatDuration, formatTime } from "@/lib/utils";
 
 interface FlightCardProps {
@@ -17,6 +19,8 @@ export function FlightCard({ flight, selected, onSelect }: FlightCardProps) {
   const first = flight.segments[0];
   const last = flight.segments[flight.segments.length - 1];
   const airline = first.airline;
+  const originAirport = findAirport(first.originCode);
+  const destinationAirport = findAirport(last.destinationCode);
 
   return (
     <div
@@ -47,7 +51,10 @@ export function FlightCard({ flight, selected, onSelect }: FlightCardProps) {
         <div className="flex items-center gap-3 sm:gap-5">
           <div className="text-center">
             <p className="text-xl font-bold tabular-nums">{formatTime(first.departureTime)}</p>
-            <p className="text-xs font-medium text-foreground/50">{first.originCode}</p>
+            <p className="text-xs font-medium text-foreground/50">
+              {originAirport && <span aria-hidden>{countryFlag(originAirport.country)} </span>}
+              {first.originCode}
+            </p>
           </div>
 
           <div className="flex-1">
@@ -75,7 +82,10 @@ export function FlightCard({ flight, selected, onSelect }: FlightCardProps) {
 
           <div className="text-center">
             <p className="text-xl font-bold tabular-nums">{formatTime(last.arrivalTime)}</p>
-            <p className="text-xs font-medium text-foreground/50">{last.destinationCode}</p>
+            <p className="text-xs font-medium text-foreground/50">
+              {destinationAirport && <span aria-hidden>{countryFlag(destinationAirport.country)} </span>}
+              {last.destinationCode}
+            </p>
           </div>
         </div>
 
