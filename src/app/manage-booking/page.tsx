@@ -3,14 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CalendarClock, Mail, Search, Ticket } from "lucide-react";
+import { CalendarClock, Mail, Search, SearchX, Ticket } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { AirlineLogo } from "@/components/ui/airline-logo";
 import { QRCodeImage } from "@/components/booking/qr-code";
 import { DownloadPdfButton } from "@/components/booking/download-pdf-button";
+import { PrintableItinerary } from "@/components/booking/printable-itinerary";
+import { EmptyState } from "@/components/ui/empty-state";
 import { findBookingByReferenceAndName, cancelBooking } from "@/lib/services/bookings";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { startRebooking } from "@/lib/booking/rebooking";
@@ -52,7 +55,8 @@ export default function ManageBookingPage() {
     booking && booking.status === "confirmed" && new Date(booking.flights[0].segments[0].departureTime).getTime() >= Date.now();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
+    <>
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8 print:hidden">
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold">Manage your booking</h1>
         <p className="mt-1 text-sm text-foreground/60">
@@ -81,9 +85,11 @@ export default function ManageBookingPage() {
       </form>
 
       {searched && !booking && (
-        <p className="text-center text-sm text-foreground/50">
-          We couldn&apos;t find a booking with that reference and last name. Double-check both fields and try again.
-        </p>
+        <EmptyState
+          icon={<SearchX size={22} />}
+          title="We couldn't find that booking"
+          description="Double-check your booking reference and last name, then try again."
+        />
       )}
 
       {booking && (
@@ -113,7 +119,12 @@ export default function ManageBookingPage() {
               <Card key={idx}>
                 <CardContent className="p-5">
                   <div className="mb-3 flex items-center justify-between">
-                    <p className="font-semibold">{first.airline.name} · {flight.segments.map((s) => s.flightNumber).join(", ")}</p>
+                    <div className="flex items-center gap-2.5">
+                      <AirlineLogo airline={first.airline} size={32} />
+                      <p className="font-semibold">
+                        {first.airline.name} <span className="text-foreground/40">· {flight.segments.map((s) => s.flightNumber).join(", ")}</span>
+                      </p>
+                    </div>
                     <Badge tone="brand">{cabinLabel(flight.cabin)}</Badge>
                   </div>
                   <div className="flex items-center justify-between text-sm">
@@ -200,5 +211,7 @@ export default function ManageBookingPage() {
         </div>
       )}
     </div>
+    {booking && <PrintableItinerary booking={booking} />}
+    </>
   );
 }

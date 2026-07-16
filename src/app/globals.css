@@ -64,5 +64,9 @@ body {
     background: white !important;
     color: black !important;
   }
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
 }
 

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Ticket, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getAllBookings, deleteBooking, updateBooking } from "@/lib/services/bookings";
 import { formatCurrency, formatDateLong } from "@/lib/utils";
 import type { Booking, BookingStatus } from "@/types";
@@ -61,9 +62,7 @@ export default function AdminBookingsPage() {
 
       <div className="space-y-3">
         {shown.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-black/15 p-10 text-center text-sm text-foreground/50 dark:border-white/20">
-            No bookings found.
-          </p>
+          <EmptyState icon={<Ticket size={22} />} title="No bookings found" description="Try a different status filter." />
         ) : (
           shown.map((booking) => {
             const flight = booking.flights[0];

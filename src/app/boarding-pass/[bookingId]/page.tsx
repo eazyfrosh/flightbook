@@ -7,6 +7,7 @@ import { getBooking } from "@/lib/services/bookings";
 import { QRCodeImage } from "@/components/booking/qr-code";
 import { DownloadPdfButton } from "@/components/booking/download-pdf-button";
 import { AirlineLogo } from "@/components/ui/airline-logo";
+import { LoadingState } from "@/components/ui/loading-state";
 import { cabinLabel, formatDateLong, formatTime } from "@/lib/utils";
 import type { Booking } from "@/types";
 
@@ -47,7 +48,7 @@ export default function BoardingPassPage() {
   }, [bookingId]);
 
   if (booking === undefined) {
-    return <div className="mx-auto max-w-2xl px-4 py-24 text-center text-foreground/50">Loading…</div>;
+    return <LoadingState label="Loading boarding pass…" />;
   }
   if (!booking) {
     return <div className="mx-auto max-w-2xl px-4 py-24 text-center text-foreground/50">Boarding pass not found.</div>;

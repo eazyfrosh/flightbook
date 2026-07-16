@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ArrowLeftRight, Plus, Search, Trash2 } from "lucide-react";
 import { AirportAutocomplete } from "./airport-autocomplete";
 import { PassengerCabinSelect } from "./passenger-cabin-select";
@@ -28,20 +29,29 @@ interface MultiSegment {
   date: string;
 }
 
+const blankSegments: MultiSegment[] = [
+  { from: "", to: "", date: "" },
+  { from: "", to: "", date: "" },
+];
+
 export function SearchWidget({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const addSearch = useSearchHistoryStore((s) => s.addSearch);
   const [tripType, setTripType] = useState<TripType>("round_trip");
-  const [from, setFrom] = useState("JFK");
-  const [to, setTo] = useState("LHR");
-  const [departureDate, setDepartureDate] = useState(todayISO(14));
-  const [returnDate, setReturnDate] = useState(todayISO(21));
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [departureDate, setDepartureDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState<PassengerCounts>({ adults: 1, children: 0, infants: 0 });
   const [cabin, setCabin] = useState<CabinClass>("economy");
-  const [segments, setSegments] = useState<MultiSegment[]>([
-    { from: "JFK", to: "LHR", date: todayISO(14) },
-    { from: "LHR", to: "CDG", date: todayISO(18) },
-  ]);
+  const [segments, setSegments] = useState<MultiSegment[]>(blankSegments);
+  const [autoFocusFrom, setAutoFocusFrom] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash === "#search-widget") {
+      setAutoFocusFrom(true);
+    }
+  }, []);
 
   function swap() {
     setFrom(to);
@@ -53,6 +63,27 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
   }
 
   function submit() {
+    if (tripType === "multi_city") {
+      const incomplete = segments.some((s) => !s.from || !s.to || !s.date);
+      if (incomplete) {
+        toast.error("Please fill in every flight's origin, destination, and date.");
+        return;
+      }
+    } else {
+      if (!from || !to) {
+        toast.error("Please choose a departure and destination airport.");
+        return;
+      }
+      if (!departureDate) {
+        toast.error("Please choose a departure date.");
+        return;
+      }
+      if (tripType === "round_trip" && !returnDate) {
+        toast.error("Please choose a return date.");
+        return;
+      }
+    }
+
     const params = new URLSearchParams();
     params.set("tripType", tripType);
     params.set("passengers", JSON.stringify(passengers));
@@ -100,7 +131,7 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
 
       {tripType !== "multi_city" ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_1fr_1fr_1fr] md:items-end">
-          <AirportAutocomplete label="From" value={from} onChange={setFrom} icon="from" />
+          <AirportAutocomplete label="From" value={from} onChange={setFrom} icon="from" openOnMount={autoFocusFrom} />
 
           <button
             type="button"
@@ -134,7 +165,7 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
               <input
                 type="date"
                 value={returnDate}
-                min={departureDate}
+                min={departureDate || todayISO()}
                 onChange={(e) => setReturnDate(e.target.value)}
                 className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-3 text-sm dark:border-white/15 dark:bg-white/5"
               />
@@ -147,7 +178,13 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
         <div className="space-y-3">
           {segments.map((seg, idx) => (
             <div key={idx} className="grid grid-cols-1 gap-3 rounded-xl bg-black/[0.02] p-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end dark:bg-white/5">
-              <AirportAutocomplete label={`Flight ${idx + 1} From`} value={seg.from} onChange={(v) => updateSegment(idx, { from: v })} icon="from" />
+              <AirportAutocomplete
+                label={`Flight ${idx + 1} From`}
+                value={seg.from}
+                onChange={(v) => updateSegment(idx, { from: v })}
+                icon="from"
+                openOnMount={idx === 0 && autoFocusFrom}
+              />
               <AirportAutocomplete label="To" value={seg.to} onChange={(v) => updateSegment(idx, { to: v })} icon="to" />
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-foreground/50">
@@ -176,10 +213,7 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
             <button
               type="button"
               onClick={() =>
-                setSegments((prev) => [
-                  ...prev,
-                  { from: prev[prev.length - 1]?.to ?? "", to: "", date: todayISO(prev.length * 4 + 14) },
-                ])
+                setSegments((prev) => [...prev, { from: prev[prev.length - 1]?.to ?? "", to: "", date: "" }])
               }
               className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 dark:text-brand-400"
             >

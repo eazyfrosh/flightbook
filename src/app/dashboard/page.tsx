@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PlaneTakeoff, User } from "lucide-react";
+import { PlaneTakeoff, Ticket, User } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import { getUserBookings, cancelBooking } from "@/lib/services/bookings";
 import { BookingCard } from "@/components/dashboard/booking-card";
 import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { startRebooking } from "@/lib/booking/rebooking";
 import type { Booking } from "@/types";
 
@@ -100,14 +102,28 @@ export default function DashboardPage() {
       </div>
 
       {fetching ? (
-        <p className="py-16 text-center text-foreground/40">Loading bookings…</p>
+        <LoadingState label="Loading your bookings…" />
       ) : shown.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-black/15 p-16 text-center dark:border-white/20">
-          <p className="text-foreground/50">No {tab} trips yet.</p>
-          <Link href="/#search-widget">
-            <Button className="mt-4">Search flights</Button>
-          </Link>
-        </div>
+        <EmptyState
+          icon={<Ticket size={22} />}
+          title={`No ${tab} trips yet`}
+          description={
+            tab === "upcoming"
+              ? "Once you book a flight, it'll show up here."
+              : tab === "past"
+              ? "Trips you've completed will appear here."
+              : "Bookings you've cancelled will appear here."
+          }
+          action={
+            tab === "upcoming" ? (
+              <Link href="/#search-widget">
+                <Button>
+                  <PlaneTakeoff size={15} /> Search flights
+                </Button>
+              </Link>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-4">
           {shown.map((booking) => (

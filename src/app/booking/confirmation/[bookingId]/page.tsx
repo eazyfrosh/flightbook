@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, Mail, PlaneTakeoff, Ticket } from "lucide-react";
+import { CheckCircle2, Mail, Ticket } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AirlineLogo } from "@/components/ui/airline-logo";
+import { LoadingState } from "@/components/ui/loading-state";
 import { QRCodeImage } from "@/components/booking/qr-code";
 import { DownloadPdfButton } from "@/components/booking/download-pdf-button";
+import { PrintableItinerary } from "@/components/booking/printable-itinerary";
 import { getBooking } from "@/lib/services/bookings";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
@@ -24,7 +27,7 @@ export default function ConfirmationPage() {
   }, [bookingId]);
 
   if (booking === undefined) {
-    return <div className="mx-auto max-w-2xl px-4 py-24 text-center text-foreground/50">Loading booking…</div>;
+    return <LoadingState label="Loading your booking…" />;
   }
 
   if (!booking) {
@@ -41,7 +44,8 @@ export default function ConfirmationPage() {
   const justRebooked = booking.rebookedAt && Date.now() - new Date(booking.rebookedAt).getTime() < 5 * 60 * 1000;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+    <>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 print:hidden">
       <div className="mb-8 text-center">
         <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
           <CheckCircle2 size={32} />
@@ -78,10 +82,12 @@ export default function ConfirmationPage() {
             <Card key={idx}>
               <CardContent className="p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="flex items-center gap-2 font-semibold">
-                    <PlaneTakeoff size={16} className="text-brand-600 dark:text-brand-400" />
-                    {first.airline.name} · {flight.segments.map((s) => s.flightNumber).join(", ")}
-                  </p>
+                  <div className="flex items-center gap-2.5">
+                    <AirlineLogo airline={first.airline} size={32} />
+                    <p className="font-semibold">
+                      {first.airline.name} <span className="text-foreground/40">· {flight.segments.map((s) => s.flightNumber).join(", ")}</span>
+                    </p>
+                  </div>
                   <Badge tone="brand">{cabinLabel(flight.cabin)}</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
@@ -163,5 +169,7 @@ export default function ConfirmationPage() {
         </Link>
       </div>
     </div>
+    <PrintableItinerary booking={booking} />
+    </>
   );
 }

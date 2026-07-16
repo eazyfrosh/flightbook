@@ -46,7 +46,9 @@ export default function RootLayout({
             <div className="no-print">
               <Footer />
             </div>
-            <Toaster position="top-center" richColors closeButton />
+            <div className="no-print">
+              <Toaster position="top-center" richColors closeButton />
+            </div>
           </AuthProvider>
         </ThemeProvider>
       </body>

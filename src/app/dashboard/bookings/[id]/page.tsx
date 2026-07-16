@@ -10,7 +10,10 @@ import { getBooking, cancelBooking } from "@/lib/services/bookings";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AirlineLogo } from "@/components/ui/airline-logo";
+import { LoadingState } from "@/components/ui/loading-state";
 import { DownloadPdfButton } from "@/components/booking/download-pdf-button";
+import { PrintableItinerary } from "@/components/booking/printable-itinerary";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { startRebooking } from "@/lib/booking/rebooking";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
@@ -31,7 +34,7 @@ export default function BookingDetailPage() {
   }, [id, user, loading, router]);
 
   if (loading || booking === undefined) {
-    return <div className="mx-auto max-w-2xl px-4 py-24 text-center text-foreground/50">Loading…</div>;
+    return <LoadingState label="Loading booking…" />;
   }
 
   if (!booking || (user && booking.userId !== user.uid)) {
@@ -60,7 +63,8 @@ export default function BookingDetailPage() {
     booking.status === "confirmed" && new Date(booking.flights[0].segments[0].departureTime).getTime() >= Date.now();
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+    <>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 print:hidden">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Booking {booking.bookingReference}</h1>
@@ -97,7 +101,12 @@ export default function BookingDetailPage() {
             <Card key={idx}>
               <CardContent className="p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="font-semibold">{first.airline.name} · {flight.segments.map((s) => s.flightNumber).join(", ")}</p>
+                  <div className="flex items-center gap-2.5">
+                    <AirlineLogo airline={first.airline} size={32} />
+                    <p className="font-semibold">
+                      {first.airline.name} <span className="text-foreground/40">· {flight.segments.map((s) => s.flightNumber).join(", ")}</span>
+                    </p>
+                  </div>
                   <Badge tone="brand">{cabinLabel(flight.cabin)}</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
@@ -159,5 +168,7 @@ export default function BookingDetailPage() {
         </Card>
       </div>
     </div>
+    <PrintableItinerary booking={booking} />
+    </>
   );
 }

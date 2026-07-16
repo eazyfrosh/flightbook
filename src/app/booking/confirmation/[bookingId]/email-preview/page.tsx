@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AirlineLogo } from "@/components/ui/airline-logo";
+import { LoadingState } from "@/components/ui/loading-state";
 import { getBooking } from "@/lib/services/bookings";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
@@ -21,7 +22,7 @@ export default function EmailPreviewPage() {
   }, [bookingId]);
 
   if (booking === undefined) {
-    return <div className="mx-auto max-w-2xl px-4 py-24 text-center text-foreground/50">Loading…</div>;
+    return <LoadingState label="Loading email preview…" />;
   }
   if (!booking) {
     return (

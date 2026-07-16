@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { adminUsers } from "@/lib/services/admin";
 import { formatDateLong } from "@/lib/utils";
 import type { UserProfile } from "@/types";
@@ -37,9 +38,7 @@ export default function AdminUsersPage() {
 
       <div className="space-y-3">
         {users.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-black/15 p-10 text-center text-sm text-foreground/50 dark:border-white/20">
-            No users yet.
-          </p>
+          <EmptyState icon={<Users size={22} />} title="No users yet" description="Registered users will appear here." />
         ) : (
           users.map((u) => (
             <Card key={u.id}>

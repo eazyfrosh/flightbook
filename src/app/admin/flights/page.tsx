@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { PlaneTakeoff, Pencil, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { AirlineLogo } from "@/components/ui/airline-logo";
+import { EmptyState } from "@/components/ui/empty-state";
 import { adminFlights } from "@/lib/services/admin";
 import { airlines, findAirline } from "@/lib/data/airlines";
 import { cabinLabel, formatCurrency } from "@/lib/utils";
@@ -150,25 +152,30 @@ export default function AdminFlightsPage() {
 
       <div className="space-y-3">
         {flights.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-black/15 p-10 text-center text-sm text-foreground/50 dark:border-white/20">
-            No admin-managed flights yet. Create one above.
-          </p>
+          <EmptyState
+            icon={<PlaneTakeoff size={22} />}
+            title="No admin-managed flights yet"
+            description="Create one above to list it for demonstration purposes."
+          />
         ) : (
           flights.map((flight) => {
             const airline = findAirline(flight.airlineId);
             return (
               <Card key={flight.id}>
                 <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-                  <div>
-                    <p className="font-semibold">
-                      {airline?.name} · {flight.flightNumber}{" "}
-                      <span className="text-foreground/50">
-                        {flight.originCode} → {flight.destinationCode}
-                      </span>
-                    </p>
-                    <p className="text-xs text-foreground/50">
-                      {cabinLabel(flight.cabin)} · {formatCurrency(flight.price)} · {flight.aircraft}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    {airline && <AirlineLogo airline={airline} size={32} />}
+                    <div>
+                      <p className="font-semibold">
+                        {airline?.name} · {flight.flightNumber}{" "}
+                        <span className="text-foreground/50">
+                          {flight.originCode} → {flight.destinationCode}
+                        </span>
+                      </p>
+                      <p className="text-xs text-foreground/50">
+                        {cabinLabel(flight.cabin)} · {formatCurrency(flight.price)} · {flight.aircraft}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge tone={flight.status === "cancelled" ? "red" : "brand"}>{flight.status}</Badge>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, ArrowRight, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, ArrowRight, SearchX, SlidersHorizontal } from "lucide-react";
 import { countryFlag } from "@/lib/data/country-flags";
 import { generateFlights } from "@/lib/data/flights";
 import { findAirport } from "@/lib/data/airports";
@@ -12,6 +12,7 @@ import { FiltersSidebar, matchesFilters, type FiltersState } from "@/components/
 import { SortBar, type SortKey } from "@/components/results/sort-bar";
 import { FlightCardSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useBookingStore } from "@/lib/store/booking-store";
 import { RebookingBanner } from "@/components/booking/rebooking-banner";
 import { formatCurrency, formatDateLong } from "@/lib/utils";
@@ -249,9 +250,16 @@ export function SearchResultsClient() {
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => <FlightCardSkeleton key={i} />)
             ) : filteredFlights.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-black/15 p-12 text-center text-foreground/50 dark:border-white/20">
-                No flights match your filters. Try widening your search.
-              </div>
+              <EmptyState
+                icon={<SearchX size={22} />}
+                title="No flights match your filters"
+                description="Try widening your price range or clearing a filter."
+                action={
+                  <Button variant="outline" onClick={() => setFilters((f) => ({ ...f, stops: [], airlineIds: [], departureWindows: [], arrivalWindows: [], refundableOnly: false, maxPrice: priceCeiling }))}>
+                    Reset filters
+                  </Button>
+                }
+              />
             ) : (
               filteredFlights.map((flight) => (
                 <FlightCard

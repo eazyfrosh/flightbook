@@ -12,14 +12,22 @@ interface AirportAutocompleteProps {
   onChange: (code: string) => void;
   icon?: "from" | "to";
   placeholder?: string;
+  openOnMount?: boolean;
 }
 
-export function AirportAutocomplete({ label, value, onChange, icon = "from", placeholder }: AirportAutocompleteProps) {
+export function AirportAutocomplete({ label, value, onChange, icon = "from", placeholder, openOnMount = false }: AirportAutocompleteProps) {
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(openOnMount);
   const containerRef = useRef<HTMLDivElement>(null);
   const selected = findAirport(value);
   const results = searchAirports(query);
+
+  // openOnMount can flip to true a render or two after this component's own
+  // mount (e.g. a parent effect detecting a URL hash), so react to it
+  // changing rather than only seeding the initial state.
+  useEffect(() => {
+    if (openOnMount) setOpen(true);
+  }, [openOnMount]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
