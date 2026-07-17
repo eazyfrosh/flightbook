@@ -47,3 +47,15 @@ export async function findBookingByReferenceAndName(
     ) ?? null
   );
 }
+
+/**
+ * Exact-match lookup by booking reference only, for the public QR
+ * verification page. Never returns a list — only the single matching
+ * booking (or null) — so no other booking is ever exposed to the caller.
+ */
+export async function getBookingByReference(reference: string): Promise<Booking | null> {
+  const ref = reference.trim().toUpperCase();
+  if (!ref) return null;
+  const all = await getAllBookings();
+  return all.find((b) => b.bookingReference.toUpperCase() === ref) ?? null;
+}

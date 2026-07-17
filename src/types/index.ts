@@ -89,7 +89,13 @@ export interface ExtrasSelection {
   priorityBoarding: boolean;
 }
 
-export type BookingStatus = "confirmed" | "cancelled" | "completed";
+export type BookingStatus =
+  | "confirmed"
+  | "checked_in"
+  | "boarding"
+  | "departed"
+  | "completed"
+  | "cancelled";
 
 export interface Booking {
   id: string;
@@ -105,6 +111,10 @@ export interface Booking {
   createdAt: string;
   rebookedAt?: string;
   seatAssignment: string | null;
+  /** Admin-managed operational fields; fall back to generated defaults when unset. */
+  gate?: string;
+  terminal?: string;
+  boardingTime?: string;
 }
 
 export type UserRole = "user" | "admin";

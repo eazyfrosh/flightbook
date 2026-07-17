@@ -43,10 +43,17 @@ export default function DashboardPage() {
 
   const now = Date.now();
   const upcoming = bookings.filter(
-    (b) => b.status === "confirmed" && new Date(b.flights[0].segments[0].departureTime).getTime() >= now
+    (b) =>
+      b.status !== "cancelled" &&
+      b.status !== "completed" &&
+      b.status !== "departed" &&
+      new Date(b.flights[0].segments[0].departureTime).getTime() >= now
   );
   const past = bookings.filter(
-    (b) => b.status !== "cancelled" && new Date(b.flights[0].segments[0].departureTime).getTime() < now
+    (b) =>
+      b.status === "departed" ||
+      b.status === "completed" ||
+      (b.status !== "cancelled" && new Date(b.flights[0].segments[0].departureTime).getTime() < now)
   );
   const cancelled = bookings.filter((b) => b.status === "cancelled");
 

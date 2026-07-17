@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "react";
 
-type Tone = "brand" | "gold" | "green" | "red" | "neutral";
+export type BadgeTone = "brand" | "gold" | "green" | "red" | "neutral";
+type Tone = BadgeTone;
 
 const toneClasses: Record<Tone, string> = {
   brand: "bg-brand-100 text-brand-800 dark:bg-brand-500/15 dark:text-brand-300",

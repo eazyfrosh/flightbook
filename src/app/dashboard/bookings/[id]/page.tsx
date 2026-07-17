@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { CalendarClock, Mail, Ticket } from "lucide-react";
+import { CalendarClock, Mail, ShieldCheck, Ticket } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { getBooking, cancelBooking } from "@/lib/services/bookings";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { DownloadPdfButton } from "@/components/booking/download-pdf-button";
 import { PrintableItinerary } from "@/components/booking/printable-itinerary";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { startRebooking } from "@/lib/booking/rebooking";
+import { bookingStatusLabel, bookingStatusTone, canManageBooking } from "@/lib/data/booking-status";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
 import type { Booking } from "@/types";
 
@@ -59,8 +60,7 @@ export default function BookingDetailPage() {
   }
 
   const extraLineItems = extrasLineItems(booking.extras);
-  const isUpcoming =
-    booking.status === "confirmed" && new Date(booking.flights[0].segments[0].departureTime).getTime() >= Date.now();
+  const manageable = canManageBooking(booking.status);
 
   return (
     <>
@@ -68,26 +68,29 @@ export default function BookingDetailPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Booking {booking.bookingReference}</h1>
-          <Badge tone={booking.status === "confirmed" ? "green" : booking.status === "cancelled" ? "red" : "neutral"} className="mt-1">
-            {booking.status}
+          <Badge tone={bookingStatusTone(booking.status)} className="mt-1">
+            {bookingStatusLabel(booking.status)}
           </Badge>
         </div>
         <div className="flex flex-wrap gap-2">
           <DownloadPdfButton label="Download PDF itinerary" />
-          {booking.status === "confirmed" && (
+          {booking.status !== "cancelled" && (
             <Link href={`/boarding-pass/${booking.id}`}>
               <Button variant="secondary"><Ticket size={15} /> Boarding pass</Button>
             </Link>
           )}
+          <Link href={`/verify/${booking.bookingReference}`} target="_blank">
+            <Button variant="outline"><ShieldCheck size={15} /> Verification page</Button>
+          </Link>
           <Link href={`/booking/confirmation/${booking.id}/email-preview`}>
             <Button variant="outline"><Mail size={15} /> Preview email</Button>
           </Link>
-          {isUpcoming && (
+          {manageable && (
             <Button variant="outline" onClick={handleRebook}>
               <CalendarClock size={15} /> Rebook flight
             </Button>
           )}
-          {booking.status === "confirmed" && (
+          {manageable && (
             <Button variant="danger" onClick={handleCancel}>Cancel booking</Button>
           )}
         </div>

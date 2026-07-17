@@ -8,17 +8,23 @@ import { QRCodeImage } from "@/components/booking/qr-code";
 import { DownloadPdfButton } from "@/components/booking/download-pdf-button";
 import { AirlineLogo } from "@/components/ui/airline-logo";
 import { LoadingState } from "@/components/ui/loading-state";
+import { getVerificationUrl } from "@/lib/booking/verification-url";
 import { cabinLabel, formatDateLong, formatTime } from "@/lib/utils";
 import type { Booking } from "@/types";
 
-function boardingTime(departureIso: string) {
+function defaultBoardingTime(departureIso: string) {
   return formatTime(new Date(new Date(departureIso).getTime() - 45 * 60000).toISOString());
 }
 
-function gateFor(flightId: string) {
+function defaultGateFor(flightId: string) {
   const letters = "ABCDEFGHJK";
   const sum = flightId.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   return `${letters[sum % letters.length]}${(sum % 30) + 1}`;
+}
+
+function defaultTerminalFor(flightId: string) {
+  const sum = flightId.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  return String(1 + (sum % 5));
 }
 
 function boardingGroupFor(flightId: string) {
@@ -125,18 +131,22 @@ export default function BoardingPassPage() {
         <div className="relative border-t-2 border-dashed border-black/15 dark:border-white/15">
           <span className="absolute left-0 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background" />
           <span className="absolute right-0 top-1/2 h-6 w-6 -translate-y-1/2 translate-x-1/2 rounded-full bg-background" />
-          <div className="grid grid-cols-3 gap-4 p-6">
+          <div className="grid grid-cols-2 gap-4 p-6 sm:grid-cols-4">
             <div>
               <p className="text-xs text-foreground/50">Date</p>
               <p className="text-sm font-medium">{formatDateLong(first.departureTime)}</p>
             </div>
             <div>
               <p className="text-xs text-foreground/50">Boarding</p>
-              <p className="text-sm font-medium">{boardingTime(first.departureTime)}</p>
+              <p className="text-sm font-medium">{booking.boardingTime ?? defaultBoardingTime(first.departureTime)}</p>
             </div>
             <div>
               <p className="text-xs text-foreground/50">Gate</p>
-              <p className="text-sm font-medium">{gateFor(flight.id)}</p>
+              <p className="text-sm font-medium">{booking.gate ?? defaultGateFor(flight.id)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-foreground/50">Terminal</p>
+              <p className="text-sm font-medium">{booking.terminal ?? defaultTerminalFor(flight.id)}</p>
             </div>
           </div>
         </div>
@@ -147,7 +157,7 @@ export default function BoardingPassPage() {
               <p className="text-xs text-foreground/50">Booking reference</p>
               <p className="font-mono text-lg font-bold tracking-widest">{booking.bookingReference}</p>
             </div>
-            <QRCodeImage value={`SKYBOOK|${booking.bookingReference}|${flight.id}`} size={100} />
+            <QRCodeImage value={getVerificationUrl(booking.bookingReference)} size={100} />
           </div>
           <div>
             <BarcodeStrip seed={`${booking.bookingReference}-${flight.id}`} />

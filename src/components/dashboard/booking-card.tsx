@@ -4,6 +4,7 @@ import type { Booking } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AirlineLogo } from "@/components/ui/airline-logo";
+import { bookingStatusLabel, bookingStatusTone, canManageBooking } from "@/lib/data/booking-status";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
 
 interface BookingCardProps {
@@ -16,6 +17,7 @@ export function BookingCard({ booking, onCancel, onRebook }: BookingCardProps) {
   const flight = booking.flights[0];
   const first = flight.segments[0];
   const last = flight.segments[flight.segments.length - 1];
+  const manageable = canManageBooking(booking.status);
 
   return (
     <div className="rounded-2xl border border-black/8 bg-white p-5 dark:border-white/10 dark:bg-white/[0.03]">
@@ -32,9 +34,7 @@ export function BookingCard({ booking, onCancel, onRebook }: BookingCardProps) {
         </div>
         <div className="flex items-center gap-1.5">
           <Badge tone="brand">{cabinLabel(flight.cabin)}</Badge>
-          <Badge tone={booking.status === "confirmed" ? "green" : booking.status === "cancelled" ? "red" : "neutral"}>
-            {booking.status}
-          </Badge>
+          <Badge tone={bookingStatusTone(booking.status)}>{bookingStatusLabel(booking.status)}</Badge>
           {booking.rebookedAt && <Badge tone="gold">Rebooked</Badge>}
         </div>
       </div>
@@ -50,17 +50,17 @@ export function BookingCard({ booking, onCancel, onRebook }: BookingCardProps) {
           <Link href={`/dashboard/bookings/${booking.id}`}>
             <Button size="sm" variant="outline">View details</Button>
           </Link>
-          {booking.status === "confirmed" && (
+          {booking.status !== "cancelled" && (
             <Link href={`/boarding-pass/${booking.id}`}>
               <Button size="sm" variant="secondary"><Ticket size={13} /> Boarding pass</Button>
             </Link>
           )}
-          {booking.status === "confirmed" && onRebook && (
+          {manageable && onRebook && (
             <Button size="sm" variant="outline" onClick={() => onRebook(booking)}>
               <CalendarClock size={13} /> Rebook
             </Button>
           )}
-          {booking.status === "confirmed" && onCancel && (
+          {manageable && onCancel && (
             <Button size="sm" variant="danger" onClick={() => onCancel(booking)}>
               Cancel
             </Button>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CalendarClock, Mail, Search, SearchX, Ticket } from "lucide-react";
+import { CalendarClock, Mail, Search, SearchX, ShieldCheck, Ticket } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { findBookingByReferenceAndName, cancelBooking } from "@/lib/services/bookings";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { startRebooking } from "@/lib/booking/rebooking";
+import { getVerificationUrl } from "@/lib/booking/verification-url";
+import { bookingStatusLabel, bookingStatusTone, canManageBooking } from "@/lib/data/booking-status";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
 import type { Booking } from "@/types";
 
@@ -51,8 +53,7 @@ export default function ManageBookingPage() {
   }
 
   const extraLineItems = booking ? extrasLineItems(booking.extras) : [];
-  const isUpcoming =
-    booking && booking.status === "confirmed" && new Date(booking.flights[0].segments[0].departureTime).getTime() >= Date.now();
+  const manageable = booking ? canManageBooking(booking.status) : false;
 
   return (
     <>
@@ -102,13 +103,11 @@ export default function ManageBookingPage() {
                   {booking.bookingReference}
                 </p>
                 <div className="mt-2 flex items-center gap-2">
-                  <Badge tone={booking.status === "confirmed" ? "green" : booking.status === "cancelled" ? "red" : "neutral"}>
-                    {booking.status}
-                  </Badge>
+                  <Badge tone={bookingStatusTone(booking.status)}>{bookingStatusLabel(booking.status)}</Badge>
                   {booking.rebookedAt && <Badge tone="gold">Rebooked</Badge>}
                 </div>
               </div>
-              <QRCodeImage value={`SKYBOOK|${booking.bookingReference}|${booking.id}`} size={110} />
+              <QRCodeImage value={getVerificationUrl(booking.bookingReference)} size={110} />
             </CardContent>
           </Card>
 
@@ -197,7 +196,12 @@ export default function ManageBookingPage() {
                 <Mail size={16} /> Preview email
               </Button>
             </Link>
-            {isUpcoming && (
+            <Link href={`/verify/${booking.bookingReference}`} target="_blank">
+              <Button variant="outline">
+                <ShieldCheck size={16} /> Verification page
+              </Button>
+            </Link>
+            {manageable && (
               <>
                 <Button variant="outline" onClick={handleRebook}>
                   <CalendarClock size={16} /> Rebook flight

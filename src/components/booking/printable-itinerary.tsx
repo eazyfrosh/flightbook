@@ -1,6 +1,8 @@
 import { QRCodeImage } from "./qr-code";
+import { getVerificationUrl } from "@/lib/booking/verification-url";
 import { AirlineLogo } from "@/components/ui/airline-logo";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
+import { bookingStatusLabel } from "@/lib/data/booking-status";
 import { cabinLabel, formatCurrency, formatDateLong, formatDuration, formatTime } from "@/lib/utils";
 import type { Booking } from "@/types";
 
@@ -34,12 +36,12 @@ export function PrintableItinerary({ booking }: { booking: Booking }) {
         <div className="mt-5 flex items-center justify-between rounded-lg border border-neutral-300 px-4 py-3">
           <div>
             <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">Booking Status</p>
-            <p className="text-sm font-bold capitalize">
-              {booking.status}
+            <p className="text-sm font-bold">
+              {bookingStatusLabel(booking.status)}
               {booking.rebookedAt && <span className="ml-2 rounded-full border border-neutral-400 px-2 py-0.5 text-[9px] uppercase tracking-wide">Rebooked</span>}
             </p>
           </div>
-          <QRCodeImage value={`SKYBOOK|${booking.bookingReference}|${booking.id}`} size={76} />
+          <QRCodeImage value={getVerificationUrl(booking.bookingReference)} size={76} />
         </div>
 
         <section className="mt-6">
