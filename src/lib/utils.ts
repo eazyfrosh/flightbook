@@ -66,6 +66,19 @@ export function generateBookingReference() {
   return ref;
 }
 
+/** Long, high-entropy secret — paired with the short bookingReference so a QR link can't be guessed or brute-forced. */
+export function generateVerificationToken() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID().replace(/-/g, "");
+  }
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let token = "";
+  for (let i = 0; i < 32; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return token;
+}
+
 export function seedRandom(seed: number) {
   let s = seed % 2147483647;
   if (s <= 0) s += 2147483646;

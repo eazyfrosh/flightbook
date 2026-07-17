@@ -41,7 +41,7 @@ export function PrintableItinerary({ booking }: { booking: Booking }) {
               {booking.rebookedAt && <span className="ml-2 rounded-full border border-neutral-400 px-2 py-0.5 text-[9px] uppercase tracking-wide">Rebooked</span>}
             </p>
           </div>
-          <QRCodeImage value={getVerificationUrl(booking.bookingReference)} size={76} />
+          <QRCodeImage value={getVerificationUrl(booking.bookingReference, booking.verificationToken)} size={76} />
         </div>
 
         <section className="mt-6">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BadgeCheck, CalendarClock, DoorOpen, Layers, ShieldCheck, Ticket } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { AirlineLogo } from "@/components/ui/airline-logo";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QRCodeImage } from "@/components/booking/qr-code";
-import { getBookingByReference } from "@/lib/services/bookings";
+import { getBookingByReferenceAndToken } from "@/lib/services/bookings";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { bookingStatusLabel, bookingStatusTone } from "@/lib/data/booking-status";
 import { getVerificationUrl } from "@/lib/booking/verification-url";
@@ -20,11 +20,13 @@ import type { Booking } from "@/types";
 
 export default function VerifyBookingPage() {
   const { reference } = useParams<{ reference: string }>();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") ?? "";
   const [booking, setBooking] = useState<Booking | null | undefined>(undefined);
 
   useEffect(() => {
-    getBookingByReference(decodeURIComponent(reference)).then(setBooking);
-  }, [reference]);
+    getBookingByReferenceAndToken(decodeURIComponent(reference), token).then(setBooking);
+  }, [reference, token]);
 
   if (booking === undefined) {
     return <LoadingState label="Verifying booking…" />;
@@ -72,7 +74,7 @@ export default function VerifyBookingPage() {
             </div>
             <p className="mt-2 text-xs text-foreground/50">Created {formatDateLong(booking.createdAt)}</p>
           </div>
-          <QRCodeImage value={getVerificationUrl(booking.bookingReference)} />
+          <QRCodeImage value={getVerificationUrl(booking.bookingReference, booking.verificationToken)} />
         </CardContent>
       </Card>
 

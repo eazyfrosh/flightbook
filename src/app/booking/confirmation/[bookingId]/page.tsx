@@ -72,7 +72,7 @@ export default function ConfirmationPage() {
               {booking.rebookedAt && <Badge tone="gold">Rebooked</Badge>}
             </div>
           </div>
-          <QRCodeImage value={getVerificationUrl(booking.bookingReference)} />
+          <QRCodeImage value={getVerificationUrl(booking.bookingReference, booking.verificationToken)} />
         </CardContent>
       </Card>
 

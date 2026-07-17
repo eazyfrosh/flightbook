@@ -16,7 +16,7 @@ import { useAuth } from "@/context/auth-context";
 import { createBooking, getBooking, updateBooking } from "@/lib/services/bookings";
 import { MEAL_OPTIONS } from "@/lib/data/flights";
 import { EXTRA_BAGGAGE_PRICE, INSURANCE_PRICE, PRIORITY_PRICE, computeExtrasTotal } from "@/lib/data/extras-pricing";
-import { formatCurrency, generateBookingReference } from "@/lib/utils";
+import { formatCurrency, generateBookingReference, generateVerificationToken } from "@/lib/utils";
 import type { Booking } from "@/types";
 
 export default function ExtrasPage() {
@@ -81,6 +81,7 @@ function ExtrasForm() {
     const booking: Booking = {
       id: `bk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       bookingReference: generateBookingReference(),
+      verificationToken: generateVerificationToken(),
       userId: user.uid,
       flights: itinerary.filter(Boolean),
       passengers,

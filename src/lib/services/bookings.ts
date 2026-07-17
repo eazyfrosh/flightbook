@@ -49,13 +49,16 @@ export async function findBookingByReferenceAndName(
 }
 
 /**
- * Exact-match lookup by booking reference only, for the public QR
- * verification page. Never returns a list — only the single matching
- * booking (or null) — so no other booking is ever exposed to the caller.
+ * Exact-match lookup by booking reference AND verification token, for the
+ * public QR verification page. Both must match — a reference alone (e.g.
+ * guessed, or read off a boarding pass) is not sufficient. Never returns a
+ * list — only the single matching booking (or null) — so no other booking
+ * is ever exposed to the caller.
  */
-export async function getBookingByReference(reference: string): Promise<Booking | null> {
+export async function getBookingByReferenceAndToken(reference: string, token: string): Promise<Booking | null> {
   const ref = reference.trim().toUpperCase();
-  if (!ref) return null;
+  const tok = token.trim();
+  if (!ref || !tok) return null;
   const all = await getAllBookings();
-  return all.find((b) => b.bookingReference.toUpperCase() === ref) ?? null;
+  return all.find((b) => b.bookingReference.toUpperCase() === ref && b.verificationToken === tok) ?? null;
 }

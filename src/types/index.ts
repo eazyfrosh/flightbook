@@ -100,6 +100,8 @@ export type BookingStatus =
 export interface Booking {
   id: string;
   bookingReference: string;
+  /** Opaque, unguessable secret paired with bookingReference to authorize QR verification access. */
+  verificationToken: string;
   userId: string;
   flights: Flight[];
   passengers: PassengerInfo[];

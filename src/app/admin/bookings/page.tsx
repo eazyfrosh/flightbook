@@ -162,7 +162,7 @@ export default function AdminBookingsPage() {
                           <option key={s} value={s}>{bookingStatusLabel(s)}</option>
                         ))}
                       </select>
-                      <Link href={`/verify/${booking.bookingReference}`} target="_blank">
+                      <Link href={`/verify/${booking.bookingReference}?token=${booking.verificationToken}`} target="_blank">
                         <Button size="sm" variant="outline">
                           <ShieldCheck size={13} /> Verify
                         </Button>

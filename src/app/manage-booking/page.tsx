@@ -107,7 +107,7 @@ export default function ManageBookingPage() {
                   {booking.rebookedAt && <Badge tone="gold">Rebooked</Badge>}
                 </div>
               </div>
-              <QRCodeImage value={getVerificationUrl(booking.bookingReference)} size={110} />
+              <QRCodeImage value={getVerificationUrl(booking.bookingReference, booking.verificationToken)} size={110} />
             </CardContent>
           </Card>
 
@@ -196,7 +196,7 @@ export default function ManageBookingPage() {
                 <Mail size={16} /> Preview email
               </Button>
             </Link>
-            <Link href={`/verify/${booking.bookingReference}`} target="_blank">
+            <Link href={`/verify/${booking.bookingReference}?token=${booking.verificationToken}`} target="_blank">
               <Button variant="outline">
                 <ShieldCheck size={16} /> Verification page
               </Button>

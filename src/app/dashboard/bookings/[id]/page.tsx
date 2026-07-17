@@ -79,7 +79,7 @@ export default function BookingDetailPage() {
               <Button variant="secondary"><Ticket size={15} /> Boarding pass</Button>
             </Link>
           )}
-          <Link href={`/verify/${booking.bookingReference}`} target="_blank">
+          <Link href={`/verify/${booking.bookingReference}?token=${booking.verificationToken}`} target="_blank">
             <Button variant="outline"><ShieldCheck size={15} /> Verification page</Button>
           </Link>
           <Link href={`/booking/confirmation/${booking.id}/email-preview`}>

@@ -157,7 +157,7 @@ export default function BoardingPassPage() {
               <p className="text-xs text-foreground/50">Booking reference</p>
               <p className="font-mono text-lg font-bold tracking-widest">{booking.bookingReference}</p>
             </div>
-            <QRCodeImage value={getVerificationUrl(booking.bookingReference)} size={100} />
+            <QRCodeImage value={getVerificationUrl(booking.bookingReference, booking.verificationToken)} size={100} />
           </div>
           <div>
             <BarcodeStrip seed={`${booking.bookingReference}-${flight.id}`} />
