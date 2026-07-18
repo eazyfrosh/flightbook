@@ -1,4 +1,5 @@
 import { getAll, getOne, queryByField, remove, upsert } from "@/lib/services/store";
+import { generateVerificationToken } from "@/lib/utils";
 import type { Booking } from "@/types";
 
 const COLLECTION = "bookings";
@@ -7,16 +8,32 @@ export function createBooking(booking: Booking) {
   return upsert(COLLECTION, booking);
 }
 
-export function getBooking(id: string) {
-  return getOne<Booking>(COLLECTION, id);
+/**
+ * Bookings created before verificationToken existed were saved without one.
+ * Backfill and persist a token the first time such a booking is read, so
+ * QR codes/links generated from it are valid from then on instead of
+ * silently embedding a missing token that can never match on verification.
+ */
+async function withVerificationToken(booking: Booking): Promise<Booking> {
+  if (booking.verificationToken) return booking;
+  const patched: Booking = { ...booking, verificationToken: generateVerificationToken() };
+  await upsert(COLLECTION, patched);
+  return patched;
 }
 
-export function getUserBookings(userId: string) {
-  return queryByField<Booking>(COLLECTION, "userId", userId);
+export async function getBooking(id: string): Promise<Booking | null> {
+  const booking = await getOne<Booking>(COLLECTION, id);
+  return booking ? withVerificationToken(booking) : null;
 }
 
-export function getAllBookings() {
-  return getAll<Booking>(COLLECTION);
+export async function getUserBookings(userId: string): Promise<Booking[]> {
+  const items = await queryByField<Booking>(COLLECTION, "userId", userId);
+  return Promise.all(items.map(withVerificationToken));
+}
+
+export async function getAllBookings(): Promise<Booking[]> {
+  const items = await getAll<Booking>(COLLECTION);
+  return Promise.all(items.map(withVerificationToken));
 }
 
 export function updateBooking(booking: Booking) {
