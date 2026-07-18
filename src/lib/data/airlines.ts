@@ -3,6 +3,7 @@ import type { Airline } from "@/types";
 export const airlines: Airline[] = [
   {
     id: "aa",
+    logoSrc: "/airlines/american-airlines.svg",
     name: "American Airlines",
     code: "AA",
     logoColor: "#0078D2",
@@ -15,6 +16,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "ba",
+    logoSrc: "/airlines/british-airways.svg",
     name: "British Airways",
     code: "BA",
     logoColor: "#075AAA",
@@ -27,6 +29,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "dl",
+    logoSrc: "/airlines/delta.svg",
     name: "Delta Air Lines",
     code: "DL",
     logoColor: "#C01933",
@@ -39,6 +42,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "ua",
+    logoSrc: "/airlines/united.svg",
     name: "United Airlines",
     code: "UA",
     logoColor: "#005DAA",
@@ -51,6 +55,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "lh",
+    logoSrc: "/airlines/lufthansa.svg",
     name: "Lufthansa",
     code: "LH",
     logoColor: "#05164D",
@@ -63,6 +68,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "af",
+    logoSrc: "/airlines/air-france.svg",
     name: "Air France",
     code: "AF",
     logoColor: "#002157",
@@ -75,6 +81,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "ek",
+    logoSrc: "/airlines/emirates.svg",
     name: "Emirates",
     code: "EK",
     logoColor: "#D71920",
@@ -87,6 +94,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "qr",
+    logoSrc: "/airlines/qatar-airways.svg",
     name: "Qatar Airways",
     code: "QR",
     logoColor: "#5C0632",
@@ -99,6 +107,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "tk",
+    logoSrc: "/airlines/turkish-airlines.svg",
     name: "Turkish Airlines",
     code: "TK",
     logoColor: "#E81932",
@@ -111,6 +120,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "kl",
+    logoSrc: "/airlines/klm.svg",
     name: "KLM",
     code: "KL",
     logoColor: "#00A1DE",
@@ -123,6 +133,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "vs",
+    logoSrc: "/airlines/virgin-atlantic.svg",
     name: "Virgin Atlantic",
     code: "VS",
     logoColor: "#DA0530",
@@ -135,6 +146,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "sq",
+    logoSrc: "/airlines/singapore-airlines.svg",
     name: "Singapore Airlines",
     code: "SQ",
     logoColor: "#F99F1E",
@@ -147,6 +159,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "ey",
+    logoSrc: "/airlines/etihad.svg",
     name: "Etihad Airways",
     code: "EY",
     logoColor: "#BD8B13",
@@ -159,6 +172,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "cx",
+    logoSrc: "/airlines/cathay-pacific.svg",
     name: "Cathay Pacific",
     code: "CX",
     logoColor: "#006564",
@@ -171,6 +185,7 @@ export const airlines: Airline[] = [
   },
   {
     id: "jl",
+    logoSrc: "/airlines/japan-airlines.svg",
     name: "Japan Airlines",
     code: "JL",
     logoColor: "#C8102E",

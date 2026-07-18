@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import type { Airline } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -10,28 +13,55 @@ function shadeColor(hex: string, percent: number) {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 
+type LoadState = "loading" | "loaded" | "error";
+
 /**
- * Custom-designed placeholder mark — not a real airline logo/trademark.
- * Every airline gets a consistent circular badge derived from its brand
- * color so branding reads the same across search results, confirmations,
- * boarding passes, and the printable itinerary.
+ * Renders each airline's official logo from the centralized `airlines` data
+ * mapping (see src/lib/data/airlines.ts). The brand-color monogram badge is
+ * always painted first and stays visible until the real logo has actually
+ * finished loading — so a slow or missing asset (404, corrupt file, no
+ * `logoSrc` set) never shows a blank gap or broken-image icon, it just
+ * stays on the clean fallback badge.
  */
 export function AirlineLogo({ airline, size = 40, className }: { airline: Airline; size?: number; className?: string }) {
+  const [state, setState] = useState<LoadState>(airline.logoSrc ? "loading" : "error");
+
+  useEffect(() => {
+    setState(airline.logoSrc ? "loading" : "error");
+  }, [airline.logoSrc]);
+
   return (
     <span
       className={cn(
-        "relative flex shrink-0 items-center justify-center rounded-full font-bold text-white shadow-md ring-1 ring-black/10",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/10 dark:ring-white/15",
         className
       )}
-      style={{
-        background: `linear-gradient(135deg, ${airline.logoColor}, ${shadeColor(airline.logoColor, -22)})`,
-        width: size,
-        height: size,
-        fontSize: size * 0.34,
-        letterSpacing: "0.02em",
-      }}
+      style={{ width: size, height: size }}
     >
-      {airline.code}
+      <span
+        aria-hidden={state === "loaded"}
+        className="absolute inset-0 flex items-center justify-center font-bold text-white transition-opacity duration-200"
+        style={{
+          background: `linear-gradient(135deg, ${airline.logoColor}, ${shadeColor(airline.logoColor, -22)})`,
+          fontSize: size * 0.34,
+          letterSpacing: "0.02em",
+          opacity: state === "loaded" ? 0 : 1,
+        }}
+      >
+        {airline.code}
+      </span>
+      {airline.logoSrc && state !== "error" && (
+        <img
+          src={airline.logoSrc}
+          alt={`${airline.name} logo`}
+          className="relative h-[78%] w-[78%] object-contain transition-opacity duration-200"
+          style={{ opacity: state === "loaded" ? 1 : 0 }}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setState("loaded")}
+          onError={() => setState("error")}
+        />
+      )}
     </span>
   );
 }

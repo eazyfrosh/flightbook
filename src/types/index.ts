@@ -14,6 +14,8 @@ export interface Airline {
   id: string;
   name: string;
   code: string;
+  /** Path under /public to the official logo asset, e.g. "/airlines/american-airlines.svg". */
+  logoSrc: string;
   logoColor: string;
   rating: number;
   baggageAllowance: {
