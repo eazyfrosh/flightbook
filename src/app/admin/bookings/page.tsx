@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
+import { AirlineLogo } from "@/components/ui/airline-logo";
 import { getAllBookings, deleteBooking, updateBooking } from "@/lib/services/bookings";
 import { BOOKING_STATUSES, bookingStatusLabel, bookingStatusTone } from "@/lib/data/booking-status";
 import { formatCurrency, formatDateLong } from "@/lib/utils";
@@ -142,14 +143,17 @@ export default function AdminBookingsPage() {
               <Card key={booking.id}>
                 <CardContent className="p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-mono text-sm font-semibold">{booking.bookingReference}</p>
-                      <p className="text-xs text-foreground/50">
-                        {flight?.segments[0].originCode} → {flight?.segments[flight.segments.length - 1].destinationCode} ·{" "}
-                        {formatDateLong(flight?.segments[0].departureTime ?? booking.createdAt)} ·{" "}
-                        {formatCurrency(booking.totalPrice, booking.currency)}
-                      </p>
-                      <p className="text-xs text-foreground/40">User: {booking.userId}</p>
+                    <div className="flex items-center gap-3">
+                      {flight && <AirlineLogo airline={flight.segments[0].airline} size={34} />}
+                      <div>
+                        <p className="font-mono text-sm font-semibold">{booking.bookingReference}</p>
+                        <p className="text-xs text-foreground/50">
+                          {flight?.segments[0].originCode} → {flight?.segments[flight.segments.length - 1].destinationCode} ·{" "}
+                          {formatDateLong(flight?.segments[0].departureTime ?? booking.createdAt)} ·{" "}
+                          {formatCurrency(booking.totalPrice, booking.currency)}
+                        </p>
+                        <p className="text-xs text-foreground/40">User: {booking.userId}</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge tone={bookingStatusTone(booking.status)}>{bookingStatusLabel(booking.status)}</Badge>

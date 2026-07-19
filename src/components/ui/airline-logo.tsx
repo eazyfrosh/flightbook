@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Airline } from "@/types";
+import { findAirline } from "@/lib/data/airlines";
 import { cn } from "@/lib/utils";
 
 function shadeColor(hex: string, percent: number) {
@@ -16,19 +17,28 @@ function shadeColor(hex: string, percent: number) {
 type LoadState = "loading" | "loaded" | "error";
 
 /**
- * Renders each airline's official logo from the centralized `airlines` data
- * mapping (see src/lib/data/airlines.ts). The brand-color monogram badge is
- * always painted first and stays visible until the real logo has actually
- * finished loading — so a slow or missing asset (404, corrupt file, no
- * `logoSrc` set) never shows a blank gap or broken-image icon, it just
- * stays on the clean fallback badge.
+ * Renders each airline's official logo, always resolved against the live
+ * `airlines` catalog (see src/lib/data/airlines.ts) by id — never trusting
+ * the `airline` prop's own `logoSrc`/`logoColor` directly. Callers often
+ * pass an `Airline` object embedded inside stored booking/flight data,
+ * which is a snapshot frozen at booking-creation time; resolving fresh
+ * here means every surface reflects current branding (e.g. a newly added
+ * logo.dev token) even for old bookings, with a single source of truth.
+ * Falls back to the passed-in object only if the id isn't in the catalog
+ * (e.g. a since-removed airline).
+ *
+ * The brand-color monogram badge is always painted first and stays
+ * visible until the real logo has actually finished loading — so a slow
+ * or missing asset (404, no logoSrc) never shows a blank gap or
+ * broken-image icon, it just stays on the clean fallback badge.
  */
 export function AirlineLogo({ airline, size = 40, className }: { airline: Airline; size?: number; className?: string }) {
-  const [state, setState] = useState<LoadState>(airline.logoSrc ? "loading" : "error");
+  const current = findAirline(airline.id) ?? airline;
+  const [state, setState] = useState<LoadState>(current.logoSrc ? "loading" : "error");
 
   useEffect(() => {
-    setState(airline.logoSrc ? "loading" : "error");
-  }, [airline.logoSrc]);
+    setState(current.logoSrc ? "loading" : "error");
+  }, [current.logoSrc]);
 
   return (
     <span
@@ -42,18 +52,18 @@ export function AirlineLogo({ airline, size = 40, className }: { airline: Airlin
         aria-hidden={state === "loaded"}
         className="absolute inset-0 flex items-center justify-center font-bold text-white transition-opacity duration-200"
         style={{
-          background: `linear-gradient(135deg, ${airline.logoColor}, ${shadeColor(airline.logoColor, -22)})`,
+          background: `linear-gradient(135deg, ${current.logoColor}, ${shadeColor(current.logoColor, -22)})`,
           fontSize: size * 0.34,
           letterSpacing: "0.02em",
           opacity: state === "loaded" ? 0 : 1,
         }}
       >
-        {airline.code}
+        {current.code}
       </span>
-      {airline.logoSrc && state !== "error" && (
+      {current.logoSrc && state !== "error" && (
         <img
-          src={airline.logoSrc}
-          alt={`${airline.name} logo`}
+          src={current.logoSrc}
+          alt={`${current.name} logo`}
           className="relative h-[78%] w-[78%] object-contain transition-opacity duration-200"
           style={{ opacity: state === "loaded" ? 1 : 0 }}
           decoding="async"
