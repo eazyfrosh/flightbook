@@ -53,6 +53,34 @@ to know which backend is active. In real-Firebase mode, the first admin user
 must have their `role` field set to `"admin"` directly in the `users` Firestore
 collection (there's no self-serve admin signup).
 
+### Why real Firebase matters for QR verification
+
+The QR-code booking verification feature (scan a boarding pass/itinerary QR
+with a phone to open `/verify/{reference}`) needs a backend that's reachable
+from *any* device, not just the browser that created the booking. In demo
+mode, bookings live only in that one browser's `localStorage`, so a QR
+scanned from a phone will always show "Booking not found" — there's nothing
+wrong with the booking, the phone's browser simply has no data at all. Real
+Firebase mode fixes this: bookings live in Firestore, shared across devices.
+
+### Firestore security rules
+
+Deploy `firestore.rules` (Firebase Console → Firestore Database → Rules, or
+`firebase deploy --only firestore:rules` with the CLI) before using real
+Firebase mode. It keeps the `bookings` collection owner/admin-only, and
+exposes two narrow public mirrors instead of ever allowing an anonymous
+client to list or read the full bookings collection:
+
+- `bookingLookup/{reference}` — backs the sign-in-free `/manage-booking`
+  page (reference + last name), gettable by exact reference only.
+- `bookingVerification/{reference}_{token}` — backs the QR verification
+  page, gettable only by the exact `reference_token` compound key, so a
+  reference alone (e.g. read off a boarding pass) can never resolve a
+  document.
+
+Neither collection is ever listable, so there is no way to enumerate other
+bookings through either public flow.
+
 ## Booking flow
 
 There is no payment step anywhere in the app. Booking a flight is:
