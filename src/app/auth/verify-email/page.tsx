@@ -52,9 +52,6 @@ export default function VerifyEmailPage() {
             {sending ? "Sending…" : "Resend verification email"}
           </Button>
         )}
-        <Button variant="ghost" onClick={() => router.push("/dashboard")}>
-          Continue to dashboard
-        </Button>
       </div>
     </AuthCard>
   );
