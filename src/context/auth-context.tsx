@@ -164,7 +164,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isDemoMode, loadOrCreateProfile]);
 
   const signUp = useCallback(
-    async (email: string, password: string, displayName: string) => {
+    async (rawEmail: string, password: string, displayName: string) => {
+      const email = rawEmail.trim().toLowerCase();
       if (isDemoMode) {
         const users = readDemoUsers();
         if (users.some((u) => u.email === email)) {
@@ -190,7 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logIn = useCallback(
-    async (email: string, password: string) => {
+    async (rawEmail: string, password: string) => {
+      const email = rawEmail.trim().toLowerCase();
       if (isDemoMode) {
         const found = readDemoUsers().find((u) => u.email === email && u.password === password);
         if (!found) throw new Error("Invalid email or password.");
@@ -221,7 +223,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isDemoMode]);
 
   const resetPassword = useCallback(
-    async (email: string) => {
+    async (rawEmail: string) => {
+      const email = rawEmail.trim().toLowerCase();
       if (isDemoMode) {
         if (!readDemoUsers().some((u) => u.email === email)) {
           throw new Error("No account found with this email.");
