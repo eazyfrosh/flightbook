@@ -56,7 +56,6 @@ export function AirlineLogo({ airline, size = 40, className }: { airline: Airlin
           alt={`${airline.name} logo`}
           className="relative h-[78%] w-[78%] object-contain transition-opacity duration-200"
           style={{ opacity: state === "loaded" ? 1 : 0 }}
-          loading="lazy"
           decoding="async"
           onLoad={() => setState("loaded")}
           onError={() => setState("error")}

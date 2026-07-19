@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { BadgeCheck, CalendarClock, DoorOpen, Layers, ShieldCheck, Ticket } from "lucide-react";
+import { BadgeCheck, CalendarClock, DoorOpen, Layers, MapPin, ShieldCheck, Ticket } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,152 +48,171 @@ export default function VerifyBookingPage() {
   }
 
   const extraLineItems = extrasLineItems(booking.extras);
+  const primaryFlight = booking.flights[0];
+  const primaryFirst = primaryFlight.segments[0];
+  const primaryLast = primaryFlight.segments[primaryFlight.segments.length - 1];
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8 text-center">
-        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-          <BadgeCheck size={32} />
-        </span>
-        <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Booking Verified</h1>
-        <p className="mt-1 text-sm text-foreground/60">
-          This is an official verification of a SkyBook demo booking. No real airline reservation is involved.
-        </p>
+    <div>
+      <div className="relative overflow-hidden bg-gradient-to-b from-brand-900 via-brand-800 to-brand-700 pb-20 pt-14 text-white">
+        <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(1.5px_1.5px_at_12%_25%,white,transparent),radial-gradient(1px_1px_at_85%_20%,white,transparent),radial-gradient(1px_1px_at_60%_60%,white,transparent),radial-gradient(1.5px_1.5px_at_30%_75%,white,transparent)]" />
+        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-white/30 backdrop-blur">
+            <BadgeCheck size={32} />
+          </span>
+          <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Booking Verified</h1>
+          <p className="mx-auto mt-1 max-w-md text-sm text-white/70">
+            This is an official verification of a SkyBook demo booking. No real airline reservation is involved.
+          </p>
+          <div className="mt-5 flex items-center justify-center gap-2">
+            <MapPin size={14} className="text-gold-400" />
+            <p className="text-lg font-semibold tracking-wide">
+              {primaryFirst.originCode} <span className="text-white/50">→</span> {primaryLast.destinationCode}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Card className="mb-6">
-        <CardContent className="flex flex-col items-center gap-5 p-6 sm:flex-row sm:justify-between">
-          <div>
+      <div className="mx-auto max-w-3xl px-4 pb-16 sm:px-6 lg:px-8">
+        {/* Ticket-stub card: reference/status on the left, perforated divider, QR on the right */}
+        <div className="-mt-12 mb-6 flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-black/5 dark:bg-white/[0.04] dark:ring-white/10 sm:flex-row">
+          <div className="flex-1 p-6">
             <p className="text-xs uppercase tracking-wide text-foreground/50">Booking reference</p>
             <p className="text-3xl font-bold tracking-widest text-brand-700 dark:text-brand-400">
               {booking.bookingReference}
             </p>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <Badge tone={bookingStatusTone(booking.status)}>{bookingStatusLabel(booking.status)}</Badge>
               {booking.rebookedAt && <Badge tone="gold">Rebooked</Badge>}
             </div>
             <p className="mt-2 text-xs text-foreground/50">Created {formatDateLong(booking.createdAt)}</p>
           </div>
-          <QRCodeImage value={getVerificationUrl(booking.bookingReference, booking.verificationToken)} />
-        </CardContent>
-      </Card>
 
-      <Card className="mb-6">
-        <CardContent className="p-5">
-          <h3 className="mb-3 font-semibold">Passenger details</h3>
-          <ul className="space-y-1.5 text-sm text-foreground/70">
-            {booking.passengers.map((p) => (
-              <li key={p.id}>
-                {p.firstName} {p.lastName} <span className="text-foreground/40">· {p.type} · {p.nationality}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      <div className="mb-6 space-y-4">
-        {booking.flights.map((flight, idx) => {
-          const first = flight.segments[0];
-          const last = flight.segments[flight.segments.length - 1];
-          return (
-            <Card key={idx}>
-              <CardContent className="p-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <AirlineLogo airline={first.airline} size={32} />
-                    <p className="font-semibold">
-                      {first.airline.name} <span className="text-foreground/40">· {flight.segments.map((s) => s.flightNumber).join(", ")}</span>
-                    </p>
-                  </div>
-                  <Badge tone="brand">{cabinLabel(flight.cabin)}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <div>
-                    <p className="text-lg font-bold">{formatTime(first.departureTime)}</p>
-                    <p className="text-foreground/50">{first.originCode} · {formatDateLong(first.departureTime)}</p>
-                  </div>
-                  <div className="px-3 text-center text-xs text-foreground/40">
-                    {formatDuration(flight.totalDurationMinutes)}
-                    <div className="my-1 border-t border-dashed border-black/15 dark:border-white/15" />
-                    {flight.stops === 0 ? "Non-stop" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold">{formatTime(last.arrivalTime)}</p>
-                    <p className="text-foreground/50">{last.destinationCode} · {formatDateLong(last.arrivalTime)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      <Card className="mb-6">
-        <CardContent className="p-5">
-          <h3 className="mb-3 flex items-center gap-2 font-semibold">
-            <DoorOpen size={16} className="text-brand-600 dark:text-brand-400" /> Gate &amp; boarding
-          </h3>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div>
-              <p className="text-xs text-foreground/50">Seat</p>
-              <p className="font-semibold">{booking.seatAssignment ?? "Not assigned"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-foreground/50">Gate</p>
-              <p className="font-semibold">{booking.gate ?? "TBD"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-foreground/50">Terminal</p>
-              <p className="font-semibold">{booking.terminal ?? "TBD"}</p>
-            </div>
+          <div className="relative flex shrink-0 items-center justify-center border-t border-dashed border-black/15 p-6 dark:border-white/15 sm:border-l sm:border-t-0">
+            <span className="absolute left-0 top-0 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background" />
+            <span className="absolute right-0 top-0 h-6 w-6 -translate-y-1/2 translate-x-1/2 rounded-full bg-background sm:right-auto sm:top-auto sm:bottom-0 sm:left-0 sm:translate-x-[-50%] sm:translate-y-1/2" />
+            <QRCodeImage value={getVerificationUrl(booking.bookingReference, booking.verificationToken)} />
           </div>
-          {booking.boardingTime && (
-            <p className="mt-3 flex items-center gap-1.5 text-sm text-foreground/60">
-              <CalendarClock size={14} /> Boarding time: <strong className="text-foreground">{booking.boardingTime}</strong>
-            </p>
-          )}
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card className="mb-6">
-        <CardContent className="p-5">
-          <h3 className="mb-3 flex items-center gap-2 font-semibold">
-            <Layers size={16} className="text-brand-600 dark:text-brand-400" /> Extras &amp; price
-          </h3>
-          {extraLineItems.length === 0 ? (
-            <p className="text-sm text-foreground/50">No extras selected.</p>
-          ) : (
+        <Card className="mb-6">
+          <CardContent className="p-5">
+            <h3 className="mb-3 font-semibold">Passenger details</h3>
             <ul className="space-y-1.5 text-sm text-foreground/70">
-              {extraLineItems.map((item) => (
-                <li key={item.label} className="flex justify-between">
-                  <span>{item.label}</span>
-                  {item.price > 0 && <span>{formatCurrency(item.price, booking.currency)}</span>}
+              {booking.passengers.map((p) => (
+                <li key={p.id}>
+                  {p.firstName} {p.lastName} <span className="text-foreground/40">· {p.type} · {p.nationality}</span>
                 </li>
               ))}
             </ul>
-          )}
-          <div className="mt-4 space-y-1.5 border-t border-black/8 pt-3 text-sm dark:border-white/10">
-            <div className="flex justify-between text-foreground/60">
-              <span>Ticket price</span>
-              <span>{formatCurrency(booking.ticketPrice, booking.currency)}</span>
-            </div>
-            <div className="flex justify-between border-t border-black/8 pt-1.5 text-base font-bold dark:border-white/10">
-              <span>Total</span>
-              <span className="text-brand-700 dark:text-brand-400">{formatCurrency(booking.totalPrice, booking.currency)}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <div className="flex flex-wrap justify-center gap-3">
-        <Link href={`/boarding-pass/${booking.id}`}>
-          <Button variant="secondary">
-            <Ticket size={16} /> View boarding pass
-          </Button>
-        </Link>
-        <Link href="/">
-          <Button variant="outline">Return to homepage</Button>
-        </Link>
+        <div className="mb-6 space-y-4">
+          {booking.flights.map((flight, idx) => {
+            const first = flight.segments[0];
+            const last = flight.segments[flight.segments.length - 1];
+            return (
+              <Card key={idx} className="overflow-hidden">
+                <div className="h-1" style={{ background: first.airline.logoColor }} />
+                <CardContent className="p-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <AirlineLogo airline={first.airline} size={32} />
+                      <p className="font-semibold">
+                        {first.airline.name} <span className="text-foreground/40">· {flight.segments.map((s) => s.flightNumber).join(", ")}</span>
+                      </p>
+                    </div>
+                    <Badge tone="brand">{cabinLabel(flight.cabin)}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div>
+                      <p className="text-lg font-bold">{formatTime(first.departureTime)}</p>
+                      <p className="text-foreground/50">{first.originCode} · {formatDateLong(first.departureTime)}</p>
+                    </div>
+                    <div className="px-3 text-center text-xs text-foreground/40">
+                      {formatDuration(flight.totalDurationMinutes)}
+                      <div className="my-1 border-t border-dashed border-black/15 dark:border-white/15" />
+                      {flight.stops === 0 ? "Non-stop" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold">{formatTime(last.arrivalTime)}</p>
+                      <p className="text-foreground/50">{last.destinationCode} · {formatDateLong(last.arrivalTime)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <Card className="mb-6">
+          <CardContent className="p-5">
+            <h3 className="mb-3 flex items-center gap-2 font-semibold">
+              <DoorOpen size={16} className="text-brand-600 dark:text-brand-400" /> Gate &amp; boarding
+            </h3>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <p className="text-xs text-foreground/50">Seat</p>
+                <p className="font-semibold">{booking.seatAssignment ?? "Not assigned"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-foreground/50">Gate</p>
+                <p className="font-semibold">{booking.gate ?? "TBD"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-foreground/50">Terminal</p>
+                <p className="font-semibold">{booking.terminal ?? "TBD"}</p>
+              </div>
+            </div>
+            {booking.boardingTime && (
+              <p className="mt-3 flex items-center gap-1.5 text-sm text-foreground/60">
+                <CalendarClock size={14} /> Boarding time: <strong className="text-foreground">{booking.boardingTime}</strong>
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardContent className="p-5">
+            <h3 className="mb-3 flex items-center gap-2 font-semibold">
+              <Layers size={16} className="text-brand-600 dark:text-brand-400" /> Extras &amp; price
+            </h3>
+            {extraLineItems.length === 0 ? (
+              <p className="text-sm text-foreground/50">No extras selected.</p>
+            ) : (
+              <ul className="space-y-1.5 text-sm text-foreground/70">
+                {extraLineItems.map((item) => (
+                  <li key={item.label} className="flex justify-between">
+                    <span>{item.label}</span>
+                    {item.price > 0 && <span>{formatCurrency(item.price, booking.currency)}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-4 space-y-1.5 border-t border-black/8 pt-3 text-sm dark:border-white/10">
+              <div className="flex justify-between text-foreground/60">
+                <span>Ticket price</span>
+                <span>{formatCurrency(booking.ticketPrice, booking.currency)}</span>
+              </div>
+              <div className="flex justify-between border-t border-black/8 pt-1.5 text-base font-bold dark:border-white/10">
+                <span>Total</span>
+                <span className="text-brand-700 dark:text-brand-400">{formatCurrency(booking.totalPrice, booking.currency)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link href={`/boarding-pass/${booking.id}`}>
+            <Button variant="secondary">
+              <Ticket size={16} /> View boarding pass
+            </Button>
+          </Link>
+          <Link href="/">
+            <Button variant="outline">Return to homepage</Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
