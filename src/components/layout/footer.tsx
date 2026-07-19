@@ -44,6 +44,11 @@ export function Footer() {
         </div>
         <div className="mt-10 border-t border-black/8 pt-6 text-xs text-foreground/50 dark:border-white/10">
           © {new Date().getFullYear()} SkyBook Demo. Not affiliated with any airline. All flights, prices, and bookings are simulated.
+          {" · "}
+          Airline logos via{" "}
+          <a href="https://logo.dev" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+            Logo.dev
+          </a>
         </div>
       </div>
     </footer>

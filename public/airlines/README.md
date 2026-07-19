@@ -1,48 +1,27 @@
-# Airline logo assets
+# Airline logos
 
-This folder is the single place official airline logo files live. The
-mapping in `src/lib/data/airlines.ts` (`logoSrc` field) points each airline
-at a file here; `AirlineLogo` (`src/components/ui/airline-logo.tsx`) loads
-it and falls back to a generated monogram badge automatically if the file
-is missing or fails to load, so the UI never breaks while assets are added
-incrementally.
+Real airline logos are served live from [logo.dev](https://logo.dev)'s Logo
+API, looked up by each carrier's official domain. The mapping lives in
+`src/lib/data/airlines.ts` (`logoDevUrl()` + each airline's `logoSrc`); the
+publishable key is `NEXT_PUBLIC_LOGO_DEV_TOKEN` in `.env.local`.
 
-Drop a file at each path below to make that airline's real logo appear
-everywhere in the app (homepage, search results, flight cards, booking
-confirmation, boarding pass, PDF itinerary, verification page, My Trips,
-Manage Booking, admin) with no code changes required.
+`AirlineLogo` (`src/components/ui/airline-logo.tsx`) loads whatever
+`logoSrc` resolves to and falls back to a generated brand-color monogram
+badge automatically if it's unset (no token configured) or fails to load
+(`fallback=404` is passed to logo.dev so a real failure reaches our own
+fallback instead of logo.dev's built-in monogram) — so the UI never shows a
+broken image either way.
 
-| Airline             | Expected file                  |
-| -------------------- | ------------------------------- |
-| American Airlines    | `american-airlines.svg`         |
-| British Airways      | `british-airways.svg`           |
-| Delta Air Lines       | `delta.svg`                     |
-| United Airlines      | `united.svg`                    |
-| Emirates             | `emirates.svg`                  |
-| Qatar Airways        | `qatar-airways.svg`             |
-| Lufthansa            | `lufthansa.svg`                 |
-| Air France           | `air-france.svg`                 |
-| KLM                  | `klm.svg`                       |
-| Turkish Airlines     | `turkish-airlines.svg`          |
-| Virgin Atlantic      | `virgin-atlantic.svg`           |
-| Singapore Airlines   | `singapore-airlines.svg`        |
-| Etihad Airways       | `etihad.svg`                    |
-| Cathay Pacific       | `cathay-pacific.svg`            |
-| Japan Airlines       | `japan-airlines.svg`            |
+This directory is kept as a fallback path: if you'd rather self-host a
+specific airline's logo instead of pulling it from logo.dev (e.g. one isn't
+resolving well), drop a file here and point that airline's `logoSrc` in
+`src/lib/data/airlines.ts` at `/airlines/<file>` instead of
+`logoDevUrl(...)`.
 
-## Asset guidelines
+## Asset guidelines (if self-hosting a file here)
 
 - **Format:** SVG preferred (crisp at any size, tiny file size, prints
-  cleanly in the PDF itinerary). PNG is also supported — just update the
-  matching `logoSrc` extension in `src/lib/data/airlines.ts` if you use it.
-- **Background:** transparent. Logos render inside a white rounded tile,
-  so a transparent background keeps edges clean in both light and dark
-  theme.
-- **Crop:** trim to the mark's visible bounds (no extra padding) — the
-  component adds its own consistent padding around every logo.
-- **Size:** any resolution works since logos are displayed at small sizes
-  (24–40px) and scaled with `object-fit: contain`, but keep raster (PNG)
-  exports reasonably sized (under ~50KB) for performance.
-
-To add or change a logo path, edit only `src/lib/data/airlines.ts` —
-nothing else needs to change.
+  cleanly in the PDF itinerary). PNG also works.
+- **Background:** transparent — logos render inside a white rounded tile.
+- **Crop:** trim to the mark's visible bounds; the component adds its own
+  padding around every logo.
