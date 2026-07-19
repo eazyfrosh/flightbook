@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Heart, MapPin } from "lucide-react";
 import { useSearchHistoryStore } from "@/lib/store/search-history-store";
+import { DestinationArt } from "@/components/home/destination-art";
 import { cn } from "@/lib/utils";
 
 const destinations = [
@@ -39,7 +40,7 @@ export function PopularDestinations() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.35, delay: (idx % 8) * 0.04 }}
                 className={cn(
-                  "group relative h-44 cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br text-white shadow-md",
+                  "group relative h-56 cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-b text-white shadow-md transition-shadow hover:shadow-xl",
                   d.gradient
                 )}
                 onClick={() =>
@@ -48,6 +49,10 @@ export function PopularDestinations() {
                   )
                 }
               >
+                <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(1.5px_1.5px_at_20%_20%,white,transparent),radial-gradient(1.5px_1.5px_at_60%_15%,white,transparent),radial-gradient(1px_1px_at_80%_30%,white,transparent),radial-gradient(1px_1px_at_35%_35%,white,transparent),radial-gradient(1.5px_1.5px_at_90%_10%,white,transparent)]" />
+                <div className="absolute inset-x-0 bottom-0 h-2/3 overflow-hidden transition-transform duration-500 group-hover:scale-105">
+                  <DestinationArt city={d.code} />
+                </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -58,7 +63,7 @@ export function PopularDestinations() {
                 >
                   <Heart size={15} className={cn(isFav && "fill-red-500 text-red-500")} />
                 </button>
-                <div className="absolute inset-0 bg-black/10 transition group-hover:bg-black/25" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent transition group-hover:from-black/60" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <p className="flex items-center gap-1 text-xs text-white/70">
                     <MapPin size={11} /> {d.country}

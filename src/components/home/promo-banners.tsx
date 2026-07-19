@@ -52,6 +52,7 @@ export function PromoBanners() {
             transition={{ duration: 0.35, delay: idx * 0.08 }}
             className={`relative overflow-hidden rounded-2xl bg-gradient-to-br p-7 text-white shadow-lg ${promo.imageGradient}`}
           >
+            <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(1.5px_1.5px_at_15%_25%,white,transparent),radial-gradient(1.5px_1.5px_at_75%_20%,white,transparent),radial-gradient(1px_1px_at_45%_60%,white,transparent),radial-gradient(1px_1px_at_90%_70%,white,transparent)]" />
             <Tag size={100} className="absolute -bottom-6 -right-6 opacity-15" />
             <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
               {promo.discountPercent}% OFF
