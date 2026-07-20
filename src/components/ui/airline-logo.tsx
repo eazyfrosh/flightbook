@@ -17,6 +17,47 @@ function shadeColor(hex: string, percent: number) {
 type LoadState = "loading" | "loaded" | "error";
 
 /**
+ * Module-level cache shared by every AirlineLogo instance on the page. A
+ * given airline's logo is fetched via a detached Image() (so the fetch is
+ * never affected by loading="lazy" heuristics or a display:none ancestor —
+ * unlike an <img> in the DOM, a plain Image() object always fetches
+ * immediately regardless of visibility) exactly once; every other
+ * instance — another flight card for the same airline, My Trips
+ * rendering many bookings at once, the always-mounted-but-hidden
+ * PrintableItinerary sharing an airline with the interactive page next
+ * to it — resolves instantly from this cache instead of racing its own
+ * independent network request against a free-tier API.
+ */
+const logoCache = new Map<string, "loaded" | "error">();
+const logoListeners = new Map<string, Set<(result: "loaded" | "error") => void>>();
+
+function loadLogo(src: string, onSettle: (result: "loaded" | "error") => void) {
+  const cached = logoCache.get(src);
+  if (cached) {
+    onSettle(cached);
+    return () => {};
+  }
+
+  let listeners = logoListeners.get(src);
+  if (!listeners) {
+    listeners = new Set();
+    logoListeners.set(src, listeners);
+    const img = new window.Image();
+    img.decoding = "async";
+    const settle = (result: "loaded" | "error") => {
+      logoCache.set(src, result);
+      for (const listener of listeners!) listener(result);
+      logoListeners.delete(src);
+    };
+    img.onload = () => settle("loaded");
+    img.onerror = () => settle("error");
+    img.src = src;
+  }
+  listeners.add(onSettle);
+  return () => listeners!.delete(onSettle);
+}
+
+/**
  * Renders each airline's official logo, always resolved against the live
  * `airlines` catalog (see src/lib/data/airlines.ts) by id — never trusting
  * the `airline` prop's own `logoSrc`/`logoColor` directly. Callers often
@@ -30,14 +71,24 @@ type LoadState = "loading" | "loaded" | "error";
  * The brand-color monogram badge is always painted first and stays
  * visible until the real logo has actually finished loading — so a slow
  * or missing asset (404, no logoSrc) never shows a blank gap or
- * broken-image icon, it just stays on the clean fallback badge.
+ * broken-image icon, it just stays on the clean fallback badge. The
+ * `<img>` tag itself is only ever mounted once the shared cache confirms
+ * the image is good, so it never shows a broken-image icon either.
  */
 export function AirlineLogo({ airline, size = 40, className }: { airline: Airline; size?: number; className?: string }) {
   const current = findAirline(airline.id) ?? airline;
-  const [state, setState] = useState<LoadState>(current.logoSrc ? "loading" : "error");
+  const [state, setState] = useState<LoadState>(() => {
+    if (!current.logoSrc) return "error";
+    return logoCache.get(current.logoSrc) ?? "loading";
+  });
 
   useEffect(() => {
-    setState(current.logoSrc ? "loading" : "error");
+    if (!current.logoSrc) {
+      setState("error");
+      return;
+    }
+    setState(logoCache.get(current.logoSrc) ?? "loading");
+    return loadLogo(current.logoSrc, setState);
   }, [current.logoSrc]);
 
   return (
@@ -60,15 +111,12 @@ export function AirlineLogo({ airline, size = 40, className }: { airline: Airlin
       >
         {current.code}
       </span>
-      {current.logoSrc && state !== "error" && (
+      {current.logoSrc && state === "loaded" && (
         <img
           src={current.logoSrc}
           alt={`${current.name} logo`}
-          className="relative h-[78%] w-[78%] object-contain transition-opacity duration-200"
-          style={{ opacity: state === "loaded" ? 1 : 0 }}
+          className="relative h-[78%] w-[78%] object-contain"
           decoding="async"
-          onLoad={() => setState("loaded")}
-          onError={() => setState("error")}
         />
       )}
     </span>
