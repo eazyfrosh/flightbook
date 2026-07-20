@@ -74,11 +74,14 @@ export default function VerifyBookingPage() {
       </div>
 
       <div className="mx-auto max-w-3xl px-4 pb-16 sm:px-6 lg:px-8">
-        {/* Ticket-stub card: reference/status on the left, perforated divider, QR on the right */}
-        <div className="-mt-12 mb-6 flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-black/5 dark:bg-white/[0.04] dark:ring-white/10 sm:flex-row">
-          <div className="flex-1 p-6">
+        {/* Ticket-stub card: reference/status on the left, perforated divider, QR on the right.
+            The card overlaps the hero by a small, purely decorative amount (-mt-6) — the extra
+            top padding (pt-9 vs p-6) guarantees the actual text content always renders safely
+            below the hero's edge, regardless of viewport, so nothing is ever obscured. */}
+        <div className="-mt-6 mb-6 flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-black/5 dark:bg-white/[0.04] dark:ring-white/10 sm:flex-row">
+          <div className="flex-1 px-5 pb-5 pt-9 sm:px-6 sm:pb-6">
             <p className="text-xs uppercase tracking-wide text-foreground/50">Booking reference</p>
-            <p className="text-3xl font-bold tracking-widest text-brand-700 dark:text-brand-400">
+            <p className="text-2xl font-bold tracking-widest text-brand-700 dark:text-brand-400 sm:text-3xl">
               {booking.bookingReference}
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -88,10 +91,10 @@ export default function VerifyBookingPage() {
             <p className="mt-2 text-xs text-foreground/50">Created {formatDateLong(booking.createdAt)}</p>
           </div>
 
-          <div className="relative flex shrink-0 items-center justify-center border-t border-dashed border-black/15 p-6 dark:border-white/15 sm:border-l sm:border-t-0">
+          <div className="relative flex shrink-0 items-center justify-center border-t border-dashed border-black/15 px-5 pb-5 pt-5 dark:border-white/15 sm:border-l sm:border-t-0 sm:px-6 sm:pb-6 sm:pt-9">
             <span className="absolute left-0 top-0 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background" />
             <span className="absolute right-0 top-0 h-6 w-6 -translate-y-1/2 translate-x-1/2 rounded-full bg-background sm:right-auto sm:top-auto sm:bottom-0 sm:left-0 sm:translate-x-[-50%] sm:translate-y-1/2" />
-            <QRCodeImage value={getVerificationUrl(booking.bookingReference, booking.verificationToken)} />
+            <QRCodeImage value={getVerificationUrl(booking.bookingReference, booking.verificationToken)} size={140} />
           </div>
         </div>
 
@@ -115,29 +118,32 @@ export default function VerifyBookingPage() {
             return (
               <Card key={idx} className="overflow-hidden">
                 <div className="h-1" style={{ background: first.airline.logoColor }} />
-                <CardContent className="p-5">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <AirlineLogo airline={first.airline} size={32} />
-                      <p className="font-semibold">
-                        {first.airline.name} <span className="text-foreground/40">· {flight.segments.map((s) => s.flightNumber).join(", ")}</span>
-                      </p>
+                <CardContent className="p-4 sm:p-5">
+                  <div className="mb-3 flex items-start justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <AirlineLogo airline={first.airline} size={32} className="shrink-0" />
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{first.airline.name}</p>
+                        <p className="truncate text-xs text-foreground/40">
+                          {flight.segments.map((s) => s.flightNumber).join(", ")}
+                        </p>
+                      </div>
                     </div>
-                    <Badge tone="brand">{cabinLabel(flight.cabin)}</Badge>
+                    <Badge tone="brand" className="shrink-0">{cabinLabel(flight.cabin)}</Badge>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div>
-                      <p className="text-lg font-bold">{formatTime(first.departureTime)}</p>
-                      <p className="text-foreground/50">{first.originCode} · {formatDateLong(first.departureTime)}</p>
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="min-w-0">
+                      <p className="text-base font-bold sm:text-lg">{formatTime(first.departureTime)}</p>
+                      <p className="truncate text-xs text-foreground/50 sm:text-sm">{first.originCode} · {formatDateLong(first.departureTime)}</p>
                     </div>
-                    <div className="px-3 text-center text-xs text-foreground/40">
+                    <div className="shrink-0 px-1.5 text-center text-[10px] text-foreground/40 sm:px-3 sm:text-xs">
                       {formatDuration(flight.totalDurationMinutes)}
-                      <div className="my-1 border-t border-dashed border-black/15 dark:border-white/15" />
+                      <div className="my-1 w-8 border-t border-dashed border-black/15 dark:border-white/15 sm:w-12" />
                       {flight.stops === 0 ? "Non-stop" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold">{formatTime(last.arrivalTime)}</p>
-                      <p className="text-foreground/50">{last.destinationCode} · {formatDateLong(last.arrivalTime)}</p>
+                    <div className="min-w-0 text-right">
+                      <p className="text-base font-bold sm:text-lg">{formatTime(last.arrivalTime)}</p>
+                      <p className="truncate text-xs text-foreground/50 sm:text-sm">{last.destinationCode} · {formatDateLong(last.arrivalTime)}</p>
                     </div>
                   </div>
                 </CardContent>
