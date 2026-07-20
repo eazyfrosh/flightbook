@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { BadgeCheck, CalendarClock, DoorOpen, Layers, MapPin, ShieldCheck, Ticket } from "lucide-react";
+import { BadgeCheck, CalendarClock, DoorOpen, Layers, MapPin, ShieldCheck, Ticket, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,7 @@ export default function VerifyBookingPage() {
     <div>
       <div className="relative overflow-hidden bg-gradient-to-b from-brand-900 via-brand-800 to-brand-700 pb-20 pt-14 text-white">
         <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(1.5px_1.5px_at_12%_25%,white,transparent),radial-gradient(1px_1px_at_85%_20%,white,transparent),radial-gradient(1px_1px_at_60%_60%,white,transparent),radial-gradient(1.5px_1.5px_at_30%_75%,white,transparent)]" />
-        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
           <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-white/30 backdrop-blur">
             <BadgeCheck size={32} />
           </span>
@@ -73,7 +73,7 @@ export default function VerifyBookingPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 pb-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8">
         {/* Ticket-stub card: reference/status on the left, perforated divider, QR on the right.
             The card overlaps the hero by a small, purely decorative amount (-mt-6) — the extra
             top padding (pt-9 vs p-6) guarantees the actual text content always renders safely
@@ -98,126 +98,136 @@ export default function VerifyBookingPage() {
           </div>
         </div>
 
-        <Card className="mb-6">
-          <CardContent className="p-5">
-            <h3 className="mb-3 font-semibold">Passenger details</h3>
-            <ul className="space-y-1.5 text-sm text-foreground/70">
-              {booking.passengers.map((p) => (
-                <li key={p.id}>
-                  {p.firstName} {p.lastName} <span className="text-foreground/40">· {p.type} · {p.nationality}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        <div className="mb-6 space-y-4">
-          {booking.flights.map((flight, idx) => {
-            const first = flight.segments[0];
-            const last = flight.segments[flight.segments.length - 1];
-            return (
-              <Card key={idx} className="overflow-hidden">
-                <div className="h-1" style={{ background: first.airline.logoColor }} />
-                <CardContent className="p-4 sm:p-5">
-                  <div className="mb-3 flex items-start justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <AirlineLogo airline={first.airline} size={32} className="shrink-0" />
+        {/* Main content: flight itinerary leads on the left; passenger, gate/boarding, and
+            price details form a compact sidebar on the right at lg+, so wider screens use the
+            available width instead of one long narrow column. Stacks in a single sensible
+            order (flights, then supporting details) on smaller screens. */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+          <div className="space-y-4 lg:col-span-2">
+            {booking.flights.map((flight, idx) => {
+              const first = flight.segments[0];
+              const last = flight.segments[flight.segments.length - 1];
+              return (
+                <Card key={idx} className="overflow-hidden">
+                  <div className="h-1" style={{ background: first.airline.logoColor }} />
+                  <CardContent className="p-4 sm:p-5">
+                    <div className="mb-3 flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <AirlineLogo airline={first.airline} size={32} className="shrink-0" />
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">{first.airline.name}</p>
+                          <p className="truncate text-xs text-foreground/40">
+                            {flight.segments.map((s) => s.flightNumber).join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge tone="brand" className="shrink-0">{cabinLabel(flight.cabin)}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 text-sm">
                       <div className="min-w-0">
-                        <p className="truncate font-semibold">{first.airline.name}</p>
-                        <p className="truncate text-xs text-foreground/40">
-                          {flight.segments.map((s) => s.flightNumber).join(", ")}
-                        </p>
+                        <p className="text-base font-bold sm:text-lg">{formatTime(first.departureTime)}</p>
+                        <p className="truncate text-xs text-foreground/50 sm:text-sm">{first.originCode} · {formatDateLong(first.departureTime)}</p>
+                      </div>
+                      <div className="shrink-0 px-1.5 text-center text-[10px] text-foreground/40 sm:px-3 sm:text-xs">
+                        {formatDuration(flight.totalDurationMinutes)}
+                        <div className="my-1 w-8 border-t border-dashed border-black/15 dark:border-white/15 sm:w-12" />
+                        {flight.stops === 0 ? "Non-stop" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
+                      </div>
+                      <div className="min-w-0 text-right">
+                        <p className="text-base font-bold sm:text-lg">{formatTime(last.arrivalTime)}</p>
+                        <p className="truncate text-xs text-foreground/50 sm:text-sm">{last.destinationCode} · {formatDateLong(last.arrivalTime)}</p>
                       </div>
                     </div>
-                    <Badge tone="brand" className="shrink-0">{cabinLabel(flight.cabin)}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 text-sm">
-                    <div className="min-w-0">
-                      <p className="text-base font-bold sm:text-lg">{formatTime(first.departureTime)}</p>
-                      <p className="truncate text-xs text-foreground/50 sm:text-sm">{first.originCode} · {formatDateLong(first.departureTime)}</p>
-                    </div>
-                    <div className="shrink-0 px-1.5 text-center text-[10px] text-foreground/40 sm:px-3 sm:text-xs">
-                      {formatDuration(flight.totalDurationMinutes)}
-                      <div className="my-1 w-8 border-t border-dashed border-black/15 dark:border-white/15 sm:w-12" />
-                      {flight.stops === 0 ? "Non-stop" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
-                    </div>
-                    <div className="min-w-0 text-right">
-                      <p className="text-base font-bold sm:text-lg">{formatTime(last.arrivalTime)}</p>
-                      <p className="truncate text-xs text-foreground/50 sm:text-sm">{last.destinationCode} · {formatDateLong(last.arrivalTime)}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
 
-        <Card className="mb-6">
-          <CardContent className="p-5">
-            <h3 className="mb-3 flex items-center gap-2 font-semibold">
-              <DoorOpen size={16} className="text-brand-600 dark:text-brand-400" /> Gate &amp; boarding
-            </h3>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-xs text-foreground/50">Seat</p>
-                <p className="font-semibold">{booking.seatAssignment ?? "Not assigned"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-foreground/50">Gate</p>
-                <p className="font-semibold">{booking.gate ?? "TBD"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-foreground/50">Terminal</p>
-                <p className="font-semibold">{booking.terminal ?? "TBD"}</p>
-              </div>
+            <div className="flex flex-wrap justify-center gap-3 pt-2 lg:justify-start">
+              <Link href={`/boarding-pass/${booking.id}`}>
+                <Button variant="secondary">
+                  <Ticket size={16} /> View boarding pass
+                </Button>
+              </Link>
+              <Link href="/">
+                <Button variant="outline">Return to homepage</Button>
+              </Link>
             </div>
-            {booking.boardingTime && (
-              <p className="mt-3 flex items-center gap-1.5 text-sm text-foreground/60">
-                <CalendarClock size={14} /> Boarding time: <strong className="text-foreground">{booking.boardingTime}</strong>
-              </p>
-            )}
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="mb-6">
-          <CardContent className="p-5">
-            <h3 className="mb-3 flex items-center gap-2 font-semibold">
-              <Layers size={16} className="text-brand-600 dark:text-brand-400" /> Extras &amp; price
-            </h3>
-            {extraLineItems.length === 0 ? (
-              <p className="text-sm text-foreground/50">No extras selected.</p>
-            ) : (
-              <ul className="space-y-1.5 text-sm text-foreground/70">
-                {extraLineItems.map((item) => (
-                  <li key={item.label} className="flex justify-between">
-                    <span>{item.label}</span>
-                    {item.price > 0 && <span>{formatCurrency(item.price, booking.currency)}</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="mt-4 space-y-1.5 border-t border-black/8 pt-3 text-sm dark:border-white/10">
-              <div className="flex justify-between text-foreground/60">
-                <span>Ticket price</span>
-                <span>{formatCurrency(booking.ticketPrice, booking.currency)}</span>
-              </div>
-              <div className="flex justify-between border-t border-black/8 pt-1.5 text-base font-bold dark:border-white/10">
-                <span>Total</span>
-                <span className="text-brand-700 dark:text-brand-400">{formatCurrency(booking.totalPrice, booking.currency)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="mb-3 flex items-center gap-2 font-semibold">
+                  <Users size={16} className="text-brand-600 dark:text-brand-400" /> Passenger details
+                </h3>
+                <ul className="space-y-1.5 text-sm text-foreground/70">
+                  {booking.passengers.map((p) => (
+                    <li key={p.id}>
+                      {p.firstName} {p.lastName} <span className="text-foreground/40">· {p.type} · {p.nationality}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
 
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link href={`/boarding-pass/${booking.id}`}>
-            <Button variant="secondary">
-              <Ticket size={16} /> View boarding pass
-            </Button>
-          </Link>
-          <Link href="/">
-            <Button variant="outline">Return to homepage</Button>
-          </Link>
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="mb-3 flex items-center gap-2 font-semibold">
+                  <DoorOpen size={16} className="text-brand-600 dark:text-brand-400" /> Gate &amp; boarding
+                </h3>
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <p className="text-xs text-foreground/50">Seat</p>
+                    <p className="font-semibold">{booking.seatAssignment ?? "Not assigned"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-foreground/50">Gate</p>
+                    <p className="font-semibold">{booking.gate ?? "TBD"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-foreground/50">Terminal</p>
+                    <p className="font-semibold">{booking.terminal ?? "TBD"}</p>
+                  </div>
+                </div>
+                {booking.boardingTime && (
+                  <p className="mt-3 flex items-center gap-1.5 text-sm text-foreground/60">
+                    <CalendarClock size={14} /> Boarding: <strong className="text-foreground">{booking.boardingTime}</strong>
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="mb-3 flex items-center gap-2 font-semibold">
+                  <Layers size={16} className="text-brand-600 dark:text-brand-400" /> Extras &amp; price
+                </h3>
+                {extraLineItems.length === 0 ? (
+                  <p className="text-sm text-foreground/50">No extras selected.</p>
+                ) : (
+                  <ul className="space-y-1.5 text-sm text-foreground/70">
+                    {extraLineItems.map((item) => (
+                      <li key={item.label} className="flex justify-between">
+                        <span>{item.label}</span>
+                        {item.price > 0 && <span>{formatCurrency(item.price, booking.currency)}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="mt-4 space-y-1.5 border-t border-black/8 pt-3 text-sm dark:border-white/10">
+                  <div className="flex justify-between text-foreground/60">
+                    <span>Ticket price</span>
+                    <span>{formatCurrency(booking.ticketPrice, booking.currency)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-black/8 pt-1.5 text-base font-bold dark:border-white/10">
+                    <span>Total</span>
+                    <span className="text-brand-700 dark:text-brand-400">{formatCurrency(booking.totalPrice, booking.currency)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
