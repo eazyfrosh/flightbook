@@ -61,9 +61,6 @@ export default function VerifyBookingPage() {
             <BadgeCheck size={32} />
           </span>
           <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Booking Verified</h1>
-          <p className="mx-auto mt-1 max-w-md text-sm text-white/70">
-            This confirms the booking details on file with SkyBook, a simulated booking platform. No real airline reservation is involved.
-          </p>
           <div className="mt-5 flex items-center justify-center gap-2">
             <MapPin size={14} className="text-gold-400" />
             <p className="text-lg font-semibold tracking-wide">
