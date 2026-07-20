@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
         <div className="flex flex-col items-center gap-3 py-4 text-center">
           <CheckCircle2 className="text-emerald-500" size={32} />
           <p className="text-sm text-foreground/70">
-            If an account exists for that email, a password reset link has been sent (simulated in demo mode).
+            If an account exists for that email, a password reset link has been sent.
           </p>
         </div>
       ) : (

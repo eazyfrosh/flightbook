@@ -14,7 +14,7 @@ export function Footer() {
               SkyBook
             </div>
             <p className="mt-3 text-sm text-foreground/60">
-              A premium flight-booking demo. Mock data only — nothing here is a real reservation.
+              Search hundreds of routes across the world&apos;s best airlines and book in minutes.
             </p>
           </div>
           <div>
@@ -38,12 +38,11 @@ export function Footer() {
             <h4 className="text-sm font-semibold">SkyBook</h4>
             <ul className="mt-3 space-y-2 text-sm text-foreground/60">
               <li><Link href="/admin" className="hover:text-foreground">Admin panel</Link></li>
-              <li><span className="opacity-70">Portfolio / demo project</span></li>
             </ul>
           </div>
         </div>
         <div className="mt-10 border-t border-black/8 pt-6 text-xs text-foreground/50 dark:border-white/10">
-          © {new Date().getFullYear()} SkyBook Demo. Not affiliated with any airline. All flights, prices, and bookings are simulated.
+          © {new Date().getFullYear()} SkyBook. Simulated booking experience — no real flights are booked or payments processed.
           {" · "}
           Airline logos via{" "}
           <a href="https://logo.dev" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">

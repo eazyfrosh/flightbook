@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/components/layout/theme-provider";
 import { AuthProvider } from "@/context/auth-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { DemoBanner } from "@/components/layout/demo-banner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,9 +18,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SkyBook — Premium Flight Booking (Demo)",
+  title: "SkyBook — Premium Flight Booking",
   description:
-    "SkyBook is a premium flight-booking portfolio demo with mock airlines and fares, and a free simulated booking flow. No real bookings are processed.",
+    "SkyBook makes it easy to search, compare, and book flights across 15 world-class airlines with a fast, secure booking experience.",
+  openGraph: {
+    title: "SkyBook — Premium Flight Booking",
+    description:
+      "Search, compare, and book flights across 15 world-class airlines with SkyBook.",
+    siteName: "SkyBook",
+  },
 };
 
 export default function RootLayout({
@@ -39,7 +44,6 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <div className="no-print">
-              <DemoBanner />
               <Header />
             </div>
             <main className="flex-1">{children}</main>

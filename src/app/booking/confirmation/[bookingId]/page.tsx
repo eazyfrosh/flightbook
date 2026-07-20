@@ -56,7 +56,7 @@ export default function ConfirmationPage() {
           {justRebooked ? "Booking rebooked!" : "Booking confirmed!"}
         </h1>
         <p className="mt-1 text-foreground/60">
-          A confirmation has been simulated for <strong>{booking.passengers[0]?.email}</strong>. This is a demo — no real email is sent.
+          A confirmation summary is ready for <strong>{booking.passengers[0]?.email}</strong>. No real email is sent.
         </p>
       </div>
 

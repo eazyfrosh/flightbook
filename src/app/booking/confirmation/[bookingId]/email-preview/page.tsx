@@ -45,12 +45,12 @@ export default function EmailPreviewPage() {
       </div>
 
       <p className="no-print mb-3 text-center text-xs text-foreground/40">
-        This is a simulated preview of the confirmation email — no email is actually sent.
+        Preview of the confirmation email — no email is actually sent.
       </p>
 
       <div className="overflow-hidden rounded-2xl border border-black/10 shadow-lg dark:border-white/10">
         <div className="space-y-1 bg-black/[0.03] px-5 py-4 text-xs text-foreground/60 dark:bg-white/5">
-          <p><span className="font-semibold text-foreground/80">From:</span> SkyBook &lt;no-reply@skybook.demo&gt;</p>
+          <p><span className="font-semibold text-foreground/80">From:</span> SkyBook &lt;no-reply@skybook.com&gt;</p>
           <p><span className="font-semibold text-foreground/80">To:</span> {recipient}</p>
           <p><span className="font-semibold text-foreground/80">Subject:</span> Your SkyBook itinerary — confirmation {booking.bookingReference}</p>
         </div>
@@ -66,7 +66,7 @@ export default function EmailPreviewPage() {
           <div className="px-6 py-6">
             <p className="text-sm text-foreground/70">Hi {booking.passengers[0]?.firstName ?? "traveler"},</p>
             <p className="mt-2 text-sm text-foreground/70">
-              Thanks for booking with SkyBook. Here&apos;s your itinerary for reference — this is a demo email, nothing was really sent.
+              Thanks for booking with SkyBook. Here&apos;s your itinerary for your records — this is a preview only, nothing was really sent.
             </p>
 
             <div className="mt-5 rounded-xl bg-black/[0.02] p-4 text-center dark:bg-white/5">
@@ -140,7 +140,7 @@ export default function EmailPreviewPage() {
           </div>
 
           <div className="border-t border-black/8 bg-black/[0.02] px-6 py-4 text-center text-[11px] text-foreground/40 dark:border-white/10 dark:bg-white/5">
-            SkyBook Demo · This is a portfolio project. No real flights, emails, or payments are involved.
+            SkyBook · Preview only. No real flights, emails, or payments are involved.
           </div>
         </div>
       </div>

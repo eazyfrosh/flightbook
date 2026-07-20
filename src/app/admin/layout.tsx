@@ -46,7 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="lg:w-56 lg:shrink-0">
         <div className="mb-4">
           <h2 className="text-lg font-bold">Admin Panel</h2>
-          <p className="text-xs text-foreground/50">Manage SkyBook demo data</p>
+          <p className="text-xs text-foreground/50">Manage SkyBook flights, bookings, and users</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
           {navItems.map((item) => {

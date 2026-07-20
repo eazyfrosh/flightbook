@@ -1,8 +1,8 @@
-# SkyBook — Premium Flight Booking (Demo)
+# SkyBook — Premium Flight Booking
 
-SkyBook is a portfolio/demo flight-booking platform built to look and feel like a
-production travel site (Expedia/Google Flights-style). **It is not connected to any
-real airline or GDS, and it has no payment system of any kind.** Booking a flight
+SkyBook is a flight-booking platform built to look and feel like a production
+travel site (Expedia/Google Flights-style). **It is not connected to any real
+airline or GDS, and it has no payment system of any kind.** Booking a flight
 is completely free — all flights, prices, and availability are simulated with
 deterministic mock data.
 
@@ -30,7 +30,7 @@ all work without any Firebase project.
 
 A seeded demo admin account is created automatically in this mode:
 
-- **Email:** `admin@skybook.demo`
+- **Email:** `admin@skybook.com`
 - **Password:** `admin123`
 
 To use a real Firebase project instead (Authentication + Firestore), create a

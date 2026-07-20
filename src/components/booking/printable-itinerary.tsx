@@ -188,7 +188,7 @@ export function PrintableItinerary({ booking }: { booking: Booking }) {
             allowance and fare rules are shown in your booking confirmation.
           </p>
           <p className="mt-1.5">
-            SkyBook Demo — this is a portfolio project. No real flights, payments, or airline systems are involved.
+            SkyBook — a simulated booking platform. No real flights, payments, or airline systems are involved.
             Document generated {generatedOn}.
           </p>
         </footer>

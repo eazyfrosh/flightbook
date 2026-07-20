@@ -52,7 +52,7 @@ export default function DealsPage() {
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold sm:text-3xl">Deals & discount codes</h1>
-        <p className="mt-2 text-foreground/60">Simulated promotions for demo purposes — no payment is ever required to book.</p>
+        <p className="mt-2 text-foreground/60">Apply a promo code at booking — no payment is ever required to book.</p>
       </div>
 
       <div className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-2">

@@ -72,7 +72,7 @@ export default function AdminFlightsPage() {
         <div>
           <h1 className="text-2xl font-bold">Manage flights</h1>
           <p className="mt-1 text-sm text-foreground/60">
-            These curated listings are independent of the live search generator, for admin CRUD demonstration.
+            These curated listings are managed independently of the live search results.
           </p>
         </div>
         <Button onClick={() => setEditing({ ...emptyFlight })}>
@@ -155,7 +155,7 @@ export default function AdminFlightsPage() {
           <EmptyState
             icon={<PlaneTakeoff size={22} />}
             title="No admin-managed flights yet"
-            description="Create one above to list it for demonstration purposes."
+            description="Create one above to list it here."
           />
         ) : (
           flights.map((flight) => {

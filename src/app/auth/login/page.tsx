@@ -54,8 +54,8 @@ function LoginForm() {
     >
       {isDemoMode && (
         <div className="mb-4 rounded-lg bg-brand-50 p-3 text-xs text-brand-800 dark:bg-brand-500/10 dark:text-brand-300">
-          Demo mode — no real Firebase project configured. Try admin account: <br />
-          <code>admin@skybook.demo</code> / <code>admin123</code>
+          No authentication provider is connected in this environment. Use the account below to continue: <br />
+          <code>admin@skybook.com</code> / <code>admin123</code>
         </div>
       )}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

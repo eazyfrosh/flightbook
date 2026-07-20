@@ -21,7 +21,7 @@ export default function VerifyEmailPage() {
         </span>
         <p className="text-sm text-foreground/70">
           We&apos;ve sent a verification link to <strong>{user?.email ?? "your email"}</strong>.
-          {isDemoMode && " In demo mode, no real email is sent — use the button below to simulate verification."}
+          {isDemoMode && " No real email is sent — use the button below to confirm verification."}
         </p>
 
         {isDemoMode ? (
@@ -29,11 +29,11 @@ export default function VerifyEmailPage() {
             className="w-full"
             onClick={() => {
               markEmailVerifiedDemo();
-              toast.success("Email verified (demo)");
+              toast.success("Email verified");
               router.push("/dashboard");
             }}
           >
-            Mark as verified (demo)
+            Mark as verified
           </Button>
         ) : (
           <Button

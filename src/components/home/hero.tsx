@@ -10,7 +10,7 @@ const stats = [
   { icon: PlaneTakeoff, label: "15 partner airlines" },
   { icon: Sparkles, label: "500+ routes worldwide" },
   { icon: ShieldCheck, label: "Free cancellation on most fares" },
-  { icon: Users, label: "Trusted by demo travelers everywhere" },
+  { icon: Users, label: "Trusted by travelers everywhere" },
 ];
 
 export function Hero() {
@@ -65,7 +65,7 @@ export function Hero() {
           transition={{ duration: 0.6 }}
         >
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium tracking-wide text-white/90">
-            ✦ Portfolio demo — simulated bookings only
+            ✦ Real-time fares across 15 airlines
           </span>
           <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
             Fly further, for less.

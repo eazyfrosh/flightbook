@@ -32,7 +32,7 @@ interface DemoUserRecord {
 
 const DEMO_USERS_KEY = "skybook_demo_users";
 const DEMO_SESSION_KEY = "skybook_demo_session";
-const DEMO_ADMIN_EMAIL = "admin@skybook.demo";
+const DEMO_ADMIN_EMAIL = "admin@skybook.com";
 const DEMO_ADMIN_PASSWORD = "admin123";
 const USERS_COLLECTION = "users";
 
