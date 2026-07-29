@@ -20,7 +20,7 @@ import {
 } from "firebase/auth";
 import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
 import { getOne, upsert } from "@/lib/services/store";
-import type { PassengerInfo, UserProfile } from "@/types";
+import type { PassengerInfo, UserProfile, UserRole } from "@/types";
 
 interface DemoUserRecord {
   uid: string;
@@ -88,13 +88,25 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/**
+ * Real-Firebase mode has no self-serve admin signup (see README), so the
+ * first admin is bootstrapped by email: whoever signs up or logs in with
+ * this address is automatically granted the admin role, both on first
+ * signup and retroactively for an existing account on its next login.
+ */
+const BOOTSTRAP_ADMIN_EMAIL = "eazysample@gmail.com";
+
+function roleForEmail(email: string): UserRole {
+  return email.trim().toLowerCase() === BOOTSTRAP_ADMIN_EMAIL ? "admin" : "user";
+}
+
 function makeProfile(uid: string, email: string, displayName: string): UserProfile {
   return {
     id: uid,
     uid,
     email,
     displayName: displayName || email.split("@")[0],
-    role: "user",
+    role: roleForEmail(email),
     createdAt: new Date().toISOString(),
     savedPassengers: [],
     favoriteDestinations: [],
@@ -110,6 +122,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadOrCreateProfile = useCallback(async (uid: string, email: string, displayName: string) => {
     const existing = await getOne<UserProfile>(USERS_COLLECTION, uid);
     if (existing) {
+      // Only ever promotes the bootstrap admin's own account, and only
+      // upward — never demotes an admin who was granted the role some
+      // other way (e.g. a manual Firestore edit for a different email).
+      if (roleForEmail(email) === "admin" && existing.role !== "admin") {
+        const promoted: UserProfile = { ...existing, role: "admin" };
+        await upsert(USERS_COLLECTION, promoted);
+        setProfile(promoted);
+        return promoted;
+      }
       setProfile(existing);
       return existing;
     }
