@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   Building2,
+  MessageCircle,
   PlaneTakeoff,
   Tag,
   Ticket,
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/admin/flights", label: "Flights", icon: PlaneTakeoff },
   { href: "/admin/airlines", label: "Airlines", icon: Building2 },
   { href: "/admin/bookings", label: "Bookings", icon: Ticket },
+  { href: "/admin/chat", label: "Live Chat", icon: MessageCircle },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/promotions", label: "Promotions & Codes", icon: Tag },
 ];

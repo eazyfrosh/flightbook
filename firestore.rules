@@ -66,5 +66,20 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // Live chat: one conversation per user, document ID == userId. The
+    // owning user and admins can read/write it; admins additionally list
+    // the whole collection for the admin chat inbox (isAdmin() doesn't
+    // depend on document content, so that list is provably safe).
+    match /chat_conversations/{conversationId} {
+      allow read, write: if isOwner(conversationId) || isAdmin();
+    }
+
+    // Messages reference their conversation via conversationId == userId.
+    // Owner or admin only, mirroring the bookings ownership pattern.
+    match /chat_messages/{messageId} {
+      allow read: if isOwner(resource.data.conversationId) || isAdmin();
+      allow create: if isOwner(request.resource.data.conversationId) || isAdmin();
+    }
   }
 }

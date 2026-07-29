@@ -168,6 +168,30 @@ export interface RecentSearch {
 
 export type FlightStatusValue = "scheduled" | "delayed" | "boarding" | "departed" | "landed" | "cancelled";
 
+export type ChatSenderRole = "user" | "admin";
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  senderRole: ChatSenderRole;
+  senderName: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface ChatConversation {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  lastMessage: string;
+  lastMessageAt: string;
+  lastSenderRole: ChatSenderRole;
+  unreadForAdmin: boolean;
+  unreadForUser: boolean;
+  createdAt: string;
+}
+
 export interface AdminFlightListing {
   id: string;
   airlineId: string;
