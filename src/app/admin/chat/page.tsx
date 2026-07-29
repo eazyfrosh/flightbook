@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Send, MessageCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,10 @@ const POLL_MS = 4000;
 export default function AdminChatPage() {
   const { profile } = useAuth();
   const [conversations, setConversations] = useState<ChatConversation[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messagesError, setMessagesError] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -30,9 +33,15 @@ export default function AdminChatPage() {
   useEffect(() => {
     let cancelled = false;
     async function poll() {
-      const list = await listConversations();
-      if (cancelled) return;
-      setConversations(list);
+      try {
+        const list = await listConversations();
+        if (cancelled) return;
+        setConversations(list);
+        setLoadError(null);
+      } catch (err) {
+        if (cancelled) return;
+        setLoadError(err instanceof Error ? err.message : "Failed to load conversations.");
+      }
     }
     poll();
     const interval = setInterval(poll, POLL_MS);
@@ -46,9 +55,15 @@ export default function AdminChatPage() {
     if (!selectedId) return;
     let cancelled = false;
     async function poll() {
-      const msgs = await getMessages(selectedId!);
-      if (cancelled) return;
-      setMessages(msgs);
+      try {
+        const msgs = await getMessages(selectedId!);
+        if (cancelled) return;
+        setMessages(msgs);
+        setMessagesError(null);
+      } catch (err) {
+        if (cancelled) return;
+        setMessagesError(err instanceof Error ? err.message : "Failed to load messages.");
+      }
     }
     poll();
     const interval = setInterval(poll, 3000);
@@ -85,12 +100,24 @@ export default function AdminChatPage() {
       });
       setMessages(await getMessages(selected.userId));
       setConversations(await listConversations());
+    } catch (err) {
+      setText(toSend);
+      toast.error(err instanceof Error ? err.message : "Failed to send reply.");
     } finally {
       setSending(false);
     }
   }
 
   if (conversations === null) {
+    if (loadError) {
+      return (
+        <EmptyState
+          icon={<MessageCircle size={22} />}
+          title="Couldn't load conversations"
+          description={`${loadError} If you're using a real Firebase project, make sure the updated firestore.rules (with the chat_conversations/chat_messages rules) has been deployed.`}
+        />
+      );
+    }
     return <LoadingState label="Loading conversations…" />;
   }
 
@@ -146,6 +173,11 @@ export default function AdminChatPage() {
                   <p className="text-xs text-foreground/50">{selected.userEmail}</p>
                 </div>
                 <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+                  {messagesError && (
+                    <p className="rounded-lg bg-red-50 p-3 text-xs text-red-700 dark:bg-red-500/10 dark:text-red-300">
+                      {messagesError}
+                    </p>
+                  )}
                   {messages.map((m) => (
                     <div key={m.id} className={cn("flex", m.senderRole === "admin" ? "justify-end" : "justify-start")}>
                       <div

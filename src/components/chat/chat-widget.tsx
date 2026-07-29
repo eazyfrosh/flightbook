@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { MessageCircle, Send, X } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { getConversation, getMessages, markConversationRead, sendMessage } from "@/lib/services/chat";
@@ -24,6 +25,7 @@ export function ChatWidget() {
   const [unread, setUnread] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [connectError, setConnectError] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const hidden = pathname?.startsWith("/admin") || profile?.role === "admin";
@@ -34,10 +36,16 @@ export function ChatWidget() {
 
     let cancelled = false;
     async function poll() {
-      const [msgs, conversation] = await Promise.all([getMessages(user!.uid), getConversation(user!.uid)]);
-      if (cancelled) return;
-      setMessages(msgs);
-      setUnread(Boolean(conversation?.unreadForUser));
+      try {
+        const [msgs, conversation] = await Promise.all([getMessages(user!.uid), getConversation(user!.uid)]);
+        if (cancelled) return;
+        setMessages(msgs);
+        setUnread(Boolean(conversation?.unreadForUser));
+        setConnectError(false);
+      } catch {
+        if (cancelled) return;
+        setConnectError(true);
+      }
     }
     poll();
     const interval = setInterval(poll, POLL_MS);
@@ -97,6 +105,10 @@ export function ChatWidget() {
         senderName,
         text: toSend,
       });
+    } catch (err) {
+      setMessages((m) => m.filter((msg) => msg.id !== optimistic.id));
+      setText(toSend);
+      toast.error(err instanceof Error ? err.message : "Failed to send message.");
     } finally {
       setSending(false);
     }
@@ -121,6 +133,11 @@ export function ChatWidget() {
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+            {connectError && (
+              <p className="rounded-lg bg-red-50 p-3 text-center text-xs text-red-700 dark:bg-red-500/10 dark:text-red-300">
+                Couldn&apos;t connect to chat. Please try again shortly.
+              </p>
+            )}
             {messages.length === 0 ? (
               <p className="pt-10 text-center text-sm text-foreground/40">
                 Send us a message and our support team will get back to you here.
