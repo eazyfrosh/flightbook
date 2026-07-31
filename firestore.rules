@@ -20,7 +20,7 @@ service cloud.firestore {
       allow read, write: if isOwner(userId) || isAdmin();
     }
 
-    // Bookings: owner or admin only. Never publicly listable or gettable —
+    // Bookings: owner or admin only. Never publicly listable or gettable;
     // the two public mirrors below exist specifically so unauthenticated
     // flows don't need any access to this collection at all.
     match /bookings/{bookingId} {
@@ -30,7 +30,7 @@ service cloud.firestore {
     }
 
     // Public mirror for /manage-booking (reference + last name, no sign-in).
-    // Document ID is the booking reference — readable by exact ID only,
+    // Document ID is the booking reference, readable by exact ID only,
     // never listable, so it can't be scanned/enumerated.
     match /bookingLookup/{reference} {
       allow get: if true;
@@ -39,7 +39,7 @@ service cloud.firestore {
     }
 
     // Public mirror for the QR verification page (reference + token).
-    // Document ID is `${reference}_${verificationToken}` — a reference
+    // Document ID is `${reference}_${verificationToken}`, so a reference
     // alone can never resolve a document here, and this collection is
     // never listable, so no booking is ever exposed without its token.
     match /bookingVerification/{compoundId} {
