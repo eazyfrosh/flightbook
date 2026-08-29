@@ -236,10 +236,61 @@ export const airports: Airport[] = [
   { code: "HIR", name: "Honiara International Airport", city: "Honiara", country: "Solomon Islands", timezone: "Pacific/Guadalcanal" },
   { code: "NOU", name: "La Tontouta International Airport", city: "Nouméa", country: "New Caledonia", timezone: "Pacific/Noumea" },
   { code: "GUM", name: "Antonio B. Won Pat International Airport", city: "Hagåtña", country: "Guam", timezone: "Pacific/Guam" },
+
+  // Microstates. Andorra, Vatican City, and Liechtenstein have no airport of
+  // their own, so these route through the real nearby airport that actually
+  // serves them (a distinct code from that airport's own entry, since two
+  // entries can't share a code). Monaco and San Marino have a genuine airport
+  // of their own right at (or effectively at) the microstate itself.
+  { code: "ALV", name: "Andorra (nearest airport: Barcelona–El Prat)", city: "Andorra la Vella", country: "Andorra", timezone: "Europe/Andorra" },
+  { code: "MCM", name: "Monaco Heliport", city: "Monaco", country: "Monaco", timezone: "Europe/Monaco" },
+  { code: "RMI", name: "Federico Fellini International Airport", city: "Rimini (for San Marino)", country: "San Marino", timezone: "Europe/San_Marino" },
+  { code: "VAT", name: "Vatican City (nearest airport: Rome–Fiumicino)", city: "Vatican City", country: "Vatican City", timezone: "Europe/Vatican" },
+  { code: "LIE", name: "Liechtenstein (nearest airport: Zurich)", city: "Vaduz", country: "Liechtenstein", timezone: "Europe/Vaduz" },
+
+  // Other well-known microstates with their own real airport, no fallback needed.
+  { code: "INU", name: "Nauru International Airport", city: "Yaren", country: "Nauru", timezone: "Pacific/Nauru" },
+  { code: "FUN", name: "Funafuti International Airport", city: "Funafuti", country: "Tuvalu", timezone: "Pacific/Funafuti" },
+  { code: "MAJ", name: "Marshall Islands International Airport", city: "Majuro", country: "Marshall Islands", timezone: "Pacific/Majuro" },
+  { code: "ROR", name: "Roman Tmetuchl International Airport", city: "Koror", country: "Palau", timezone: "Pacific/Palau" },
+  { code: "TRW", name: "Bonriki International Airport", city: "Tarawa", country: "Kiribati", timezone: "Pacific/Tarawa" },
+  { code: "SKB", name: "Robert L. Bradshaw International Airport", city: "Basseterre", country: "Saint Kitts and Nevis", timezone: "America/St_Kitts" },
 ];
 
 export function findAirport(code: string): Airport | undefined {
   return airports.find((a) => a.code === code);
+}
+
+/**
+ * Resolves pasted text straight to a single airport when the paste itself
+ * unambiguously identifies one, e.g. "JFK", "jfk", "JFK - John F. Kennedy
+ * International Airport", "New York (JFK)", or the full airport name copied
+ * from elsewhere in the app. Returns undefined for anything looser (a city
+ * or country name, a partial word) so the normal fuzzy dropdown handles it.
+ */
+export function recognizeAirport(pasted: string): Airport | undefined {
+  const trimmed = pasted.trim();
+  if (!trimmed) return undefined;
+
+  if (/^[A-Za-z]{3}$/.test(trimmed)) {
+    const exact = findAirport(trimmed.toUpperCase());
+    if (exact) return exact;
+  }
+
+  const trailingCode = trimmed.match(/\(([A-Za-z]{3})\)\s*$/);
+  if (trailingCode) {
+    const exact = findAirport(trailingCode[1].toUpperCase());
+    if (exact) return exact;
+  }
+
+  const leadingCode = trimmed.match(/^([A-Za-z]{3})\s*[-:,]/);
+  if (leadingCode) {
+    const exact = findAirport(leadingCode[1].toUpperCase());
+    if (exact) return exact;
+  }
+
+  const lower = trimmed.toLowerCase();
+  return airports.find((a) => a.name.toLowerCase() === lower);
 }
 
 export function searchAirports(query: string, limit = 8): Airport[] {
