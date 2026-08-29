@@ -290,12 +290,33 @@ export function recognizeAirport(pasted: string): Airport | undefined {
   }
 
   const lower = trimmed.toLowerCase();
-  return airports.find((a) => a.name.toLowerCase() === lower);
+  const exactName = airports.find((a) => a.name.toLowerCase() === lower);
+  if (exactName) return exactName;
+
+  // Looser paste formats, e.g. "Paris Charles de Gaulle Airport" (the city
+  // prefixed onto the airport's own name) or any other reordering/combination
+  // of the airport's own fields. Auto-select only when every word in the
+  // paste is accounted for by exactly one airport, so an ambiguous or
+  // unrelated paste safely falls through to the normal fuzzy dropdown
+  // instead of guessing.
+  const words = lower.split(/\s+/).filter(Boolean);
+  if (words.length > 1) {
+    const matches = airports.filter((a) => wordsMatchAirport(words, a));
+    if (matches.length === 1) return matches[0];
+  }
+
+  return undefined;
+}
+
+function wordsMatchAirport(words: string[], a: Airport): boolean {
+  const haystack = `${a.code} ${a.city} ${a.name} ${a.country}`.toLowerCase();
+  return words.every((w) => haystack.includes(w));
 }
 
 export function searchAirports(query: string, limit = 8): Airport[] {
   const q = query.trim().toLowerCase();
   if (!q) return airports.slice(0, limit);
+  const words = q.split(/\s+/).filter(Boolean);
   const scored = airports
     .map((a) => {
       const code = a.code.toLowerCase();
@@ -309,6 +330,10 @@ export function searchAirports(query: string, limit = 8): Airport[] {
       else if (city.includes(q)) score = 60;
       else if (name.includes(q)) score = 40;
       else if (country.includes(q)) score = 20;
+      // Multi-word query where the words are spread across the airport's
+      // fields in some order/combination, e.g. "Paris Charles de Gaulle
+      // Airport" (city name prefixed onto the airport's own name).
+      else if (words.length > 1 && wordsMatchAirport(words, a)) score = 30;
       return { a, score };
     })
     .filter((x) => x.score > 0)
