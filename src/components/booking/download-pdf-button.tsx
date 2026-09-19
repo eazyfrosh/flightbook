@@ -33,6 +33,29 @@ export function DownloadPdfButton({ label = "Download PDF" }: { label?: string }
       exportRoot.style.zIndex = "-1";
       document.body.appendChild(exportRoot);
 
+      // Airline logos are loaded from an external provider. Embed each logo
+      // as a data URL in the temporary clone so the canvas keeps the actual
+      // logo without becoming tainted by a cross-origin image.
+      await Promise.all(
+        [...exportRoot.querySelectorAll<HTMLImageElement>("img")].map(async (image) => {
+          if (!image.src.startsWith("http")) return;
+          try {
+            const response = await fetch(image.src, { mode: "cors" });
+            if (!response.ok) return;
+            const blob = await response.blob();
+            image.src = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(String(reader.result));
+              reader.onerror = () => reject(reader.error);
+              reader.readAsDataURL(blob);
+            });
+          } catch {
+            // The original image remains in place if the provider does not
+            // allow CORS. html2canvas can still render it when permitted.
+          }
+        })
+      );
+
       await document.fonts.ready;
       const canvas = await html2canvas(exportRoot, {
         backgroundColor: "#ffffff",
