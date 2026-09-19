@@ -68,8 +68,9 @@ export function DownloadPdfButton({ label = "Download PDF" }: { label?: string }
       });
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pageWidth = 210;
-      const pageHeight = 297;
+      const pageMargin = 10;
+      const pageWidth = 210 - pageMargin * 2;
+      const pageHeight = 297 - pageMargin * 2;
       const imageDimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
         const image = new Image();
         image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
@@ -81,7 +82,7 @@ export function DownloadPdfButton({ label = "Download PDF" }: { label?: string }
 
       for (let page = 0; page < pageCount; page += 1) {
         if (page > 0) pdf.addPage();
-        pdf.addImage(imageData, "PNG", 0, -page * pageHeight, pageWidth, imageHeight);
+        pdf.addImage(imageData, "PNG", pageMargin, pageMargin - page * pageHeight, pageWidth, imageHeight);
       }
 
       pdf.save("skybook-itinerary.pdf");
