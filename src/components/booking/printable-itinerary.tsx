@@ -7,10 +7,8 @@ import { cabinLabel, formatCurrency, formatDateLong, formatDuration, formatTime 
 import type { Booking } from "@/types";
 
 /**
- * Print-only itinerary document. Hidden on screen (`hidden print:block`) and
- * shown only when the browser's print dialog is invoked via DownloadPdfButton,
- * so "download PDF" produces a purpose-built travel document instead of a
- * screenshot of the interactive page.
+ * Itinerary document used by the direct PDF exporter. It stays hidden in the
+ * live page and is cloned into an off-screen export surface when downloaded.
  */
 export function PrintableItinerary({ booking }: { booking: Booking }) {
   const extraItems = extrasLineItems(booking.extras);
@@ -19,7 +17,7 @@ export function PrintableItinerary({ booking }: { booking: Booking }) {
   const primaryFirst = primaryFlight.segments[0];
 
   return (
-    <div className="hidden print:block print:bg-white print:text-black">
+    <div className="printable-itinerary hidden print:block print:bg-white print:text-black">
       <div className="mx-auto max-w-[190mm]">
         <div className="flex items-center justify-between border-b-4 pb-4" style={{ borderColor: primaryFirst.airline.logoColor }}>
           <div className="flex items-center gap-2.5">
