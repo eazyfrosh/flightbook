@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { Button } from "@/components/ui/button";
 
 export function DownloadPdfButton({ label = "Download PDF" }: { label?: string }) {
@@ -57,18 +57,22 @@ export function DownloadPdfButton({ label = "Download PDF" }: { label?: string }
       );
 
       await document.fonts.ready;
-      const canvas = await html2canvas(exportRoot, {
+      const imageData = await toPng(exportRoot, {
         backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true,
-        logging: false,
+        pixelRatio: 2,
+        cacheBust: true,
       });
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = 210;
       const pageHeight = 297;
-      const imageHeight = (canvas.height * pageWidth) / canvas.width;
-      const imageData = canvas.toDataURL("image/png");
+      const imageDimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+        image.onerror = () => reject(new Error("Generated itinerary image could not be loaded"));
+        image.src = imageData;
+      });
+      const imageHeight = (imageDimensions.height * pageWidth) / imageDimensions.width;
       const pageCount = Math.max(1, Math.ceil(imageHeight / pageHeight));
 
       for (let page = 0; page < pageCount; page += 1) {
