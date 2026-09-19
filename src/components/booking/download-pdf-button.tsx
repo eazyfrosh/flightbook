@@ -18,19 +18,22 @@ export function DownloadPdfButton({ label = "Download PDF" }: { label?: string }
 
     try {
       // The itinerary remains hidden in the live page. Render a temporary clone
-      // off-screen so the PDF uses the existing itinerary design without
+      // in the viewport so the PDF uses the existing itinerary design without
       // changing the interactive page or opening the browser print dialog.
       exportRoot = source.cloneNode(true) as HTMLElement;
       exportRoot.classList.remove("hidden");
       exportRoot.classList.remove("print:block");
       exportRoot.classList.remove("print:bg-white", "print:text-black");
-      exportRoot.style.position = "fixed";
-      exportRoot.style.left = "-10000px";
+      // Some production browsers return a blank image for an off-screen,
+      // fixed element even though its layout dimensions are non-zero.
+      exportRoot.style.position = "absolute";
+      exportRoot.style.left = "0";
       exportRoot.style.top = "0";
       exportRoot.style.width = "190mm";
       exportRoot.style.backgroundColor = "#ffffff";
       exportRoot.style.color = "#000000";
-      exportRoot.style.zIndex = "-1";
+      exportRoot.style.zIndex = "9999";
+      exportRoot.style.pointerEvents = "none";
       document.body.appendChild(exportRoot);
 
       // Airline logos are loaded from an external provider. Embed each logo
@@ -57,6 +60,7 @@ export function DownloadPdfButton({ label = "Download PDF" }: { label?: string }
       );
 
       await document.fonts.ready;
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
       const imageData = await toPng(exportRoot, {
         backgroundColor: "#ffffff",
         pixelRatio: 2,
