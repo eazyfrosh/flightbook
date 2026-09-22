@@ -1,6 +1,7 @@
 import type { Airport } from "@/types";
+import airportIndex from "./airports-index.json";
 
-export const airports: Airport[] = [
+const featuredAirports: Airport[] = [
   { code: "JFK", name: "John F. Kennedy International Airport", city: "New York", country: "United States", timezone: "America/New_York" },
   { code: "LGA", name: "LaGuardia Airport", city: "New York", country: "United States", timezone: "America/New_York" },
   { code: "EWR", name: "Newark Liberty International Airport", city: "Newark", country: "United States", timezone: "America/New_York" },
@@ -257,8 +258,32 @@ export const airports: Airport[] = [
   { code: "SKB", name: "Robert L. Bradshaw International Airport", city: "Basseterre", country: "Saint Kitts and Nevis", timezone: "America/St_Kitts" },
 ];
 
+// Keep the featured airports first for the empty search and retain their
+// familiar display names. The generated index covers the remaining IATA codes.
+const featuredCodes = new Set(featuredAirports.map((airport) => airport.code));
+export const airports: Airport[] = [
+  ...featuredAirports,
+  ...airportIndex
+    .filter(([code]) => !featuredCodes.has(code))
+    .map(([code, name, city, country]) => ({ code, name, city, country })),
+];
+
+const airportsByCode = new Map(airports.map((airport) => [airport.code, airport]));
+
+function normalizeSearchText(text: string): string {
+  return text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+const searchIndex = airports.map((airport) => {
+  const city = normalizeSearchText(airport.city);
+  const name = normalizeSearchText(airport.name);
+  const country = normalizeSearchText(airport.country);
+  return { airport, code: airport.code.toLowerCase(), city, name, country,
+    haystack: `${airport.code.toLowerCase()} ${city} ${name} ${country}` };
+});
+
 export function findAirport(code: string): Airport | undefined {
-  return airports.find((a) => a.code === code);
+  return airportsByCode.get(code.toUpperCase());
 }
 
 /**
@@ -289,8 +314,8 @@ export function recognizeAirport(pasted: string): Airport | undefined {
     if (exact) return exact;
   }
 
-  const lower = trimmed.toLowerCase();
-  const exactName = airports.find((a) => a.name.toLowerCase() === lower);
+  const lower = normalizeSearchText(trimmed);
+  const exactName = airports.find((a) => normalizeSearchText(a.name) === lower);
   if (exactName) return exactName;
 
   // Looser paste formats, e.g. "Paris Charles de Gaulle Airport" (the city
@@ -309,20 +334,16 @@ export function recognizeAirport(pasted: string): Airport | undefined {
 }
 
 function wordsMatchAirport(words: string[], a: Airport): boolean {
-  const haystack = `${a.code} ${a.city} ${a.name} ${a.country}`.toLowerCase();
+  const haystack = normalizeSearchText(`${a.code} ${a.city} ${a.name} ${a.country}`);
   return words.every((w) => haystack.includes(w));
 }
 
 export function searchAirports(query: string, limit = 8): Airport[] {
-  const q = query.trim().toLowerCase();
+  const q = normalizeSearchText(query);
   if (!q) return airports.slice(0, limit);
   const words = q.split(/\s+/).filter(Boolean);
-  const scored = airports
-    .map((a) => {
-      const code = a.code.toLowerCase();
-      const city = a.city.toLowerCase();
-      const name = a.name.toLowerCase();
-      const country = a.country.toLowerCase();
+  const scored = searchIndex
+    .map(({ airport, code, city, name, country, haystack }) => {
       let score = -1;
       if (code === q) score = 100;
       else if (code.startsWith(q)) score = 90;
@@ -333,10 +354,10 @@ export function searchAirports(query: string, limit = 8): Airport[] {
       // Multi-word query where the words are spread across the airport's
       // fields in some order/combination, e.g. "Paris Charles de Gaulle
       // Airport" (city name prefixed onto the airport's own name).
-      else if (words.length > 1 && wordsMatchAirport(words, a)) score = 30;
-      return { a, score };
+      else if (words.length > 1 && words.every((word) => haystack.includes(word))) score = 30;
+      return { airport, score };
     })
     .filter((x) => x.score > 0)
     .sort((x, y) => y.score - x.score);
-  return scored.slice(0, limit).map((x) => x.a);
+  return scored.slice(0, limit).map((x) => x.airport);
 }

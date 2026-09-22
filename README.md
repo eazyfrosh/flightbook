@@ -22,6 +22,15 @@ npm run dev
 
 Open http://localhost:3000.
 
+## Airport search data
+
+The airport picker includes a local index of airports with three-letter IATA
+codes, so searching does not depend on an external service. The index is
+generated from [OurAirports public domain data](https://ourairports.com/data/).
+To refresh it, run `python scripts/update_airports.py` and commit the updated
+`src/lib/data/airports-index.json`. Airports without an IATA code cannot be
+selected for flight search.
+
 ## Demo mode vs. real Firebase
 
 The app works out of the box with **zero configuration** using a local-demo auth
