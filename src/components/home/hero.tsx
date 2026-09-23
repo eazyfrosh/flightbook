@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Globe2, MapPin, Plane, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Globe2, MapPin, Plane, ShieldCheck } from "lucide-react";
 import { SearchWidget } from "@/components/search/search-widget";
 import { cn } from "@/lib/utils";
 
@@ -49,10 +49,7 @@ export function Hero() {
       <div className="mx-auto max-w-7xl px-4 pb-10 pt-14 sm:px-6 sm:pb-14 sm:pt-20 lg:px-8 lg:pt-24">
         <div className="grid items-center gap-12 lg:grid-cols-[1.12fr_.88fr] lg:gap-16">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3.5 py-2 text-xs font-semibold text-white/85 shadow-lg shadow-black/10 backdrop-blur">
-              <Sparkles size={14} className="text-gold-400" /> Plan every detail your way
-            </span>
-            <h1 className="mt-6 max-w-3xl text-4xl font-bold leading-[1.04] tracking-[-0.04em] sm:text-6xl lg:text-[4.4rem]">
+            <h1 className="max-w-3xl text-4xl font-bold leading-[1.04] tracking-[-0.04em] sm:text-6xl lg:text-[4.4rem]">
               The world is closer than you think.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-white/68 sm:text-lg">
