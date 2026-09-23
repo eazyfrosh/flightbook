@@ -8,13 +8,13 @@ import { PromoBanners } from "@/components/home/promo-banners";
 
 export default function Home() {
   return (
-    <div>
+    <div className="overflow-hidden">
       <Hero />
       <RecentSearches />
-      <HowItWorks />
       <PopularDestinations />
-      <WorldRoutesMap />
+      <HowItWorks />
       <PromoBanners />
+      <WorldRoutesMap />
       <AirlinesSection />
     </div>
   );

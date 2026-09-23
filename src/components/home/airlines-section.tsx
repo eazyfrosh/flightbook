@@ -12,7 +12,7 @@ export function AirlinesSection() {
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mb-10 text-center">
         <h2 className="text-2xl font-bold sm:text-3xl">Our partner airlines</h2>
-        <p className="mt-2 text-foreground/60">Mock fares from 15 world-class carriers</p>
+        <p className="mt-2 text-foreground/60">Compare cabin options from 15 world-class carriers</p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {airlines.map((airline, idx) => (

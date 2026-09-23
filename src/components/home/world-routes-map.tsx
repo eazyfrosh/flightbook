@@ -47,7 +47,7 @@ export function WorldRoutesMap() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-center">
           <h2 className="text-2xl font-bold sm:text-3xl">Where we fly</h2>
-          <p className="mt-2 text-white/60">A network spanning every continent — mock routes, real ambition</p>
+          <p className="mt-2 text-white/60">Discover connections between iconic cities around the world</p>
         </div>
 
         <motion.svg

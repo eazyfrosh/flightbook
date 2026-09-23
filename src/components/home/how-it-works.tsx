@@ -1,55 +1,62 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CalendarSearch, PlaneTakeoff, Ticket } from "lucide-react";
+import { ArrowUpRight, CalendarSearch, PlaneTakeoff, Ticket } from "lucide-react";
 
 const steps = [
   {
     icon: CalendarSearch,
-    title: "Search your route",
-    description: "Pick your airports, dates, and cabin — compare fares across 15 airlines instantly.",
+    eyebrow: "01 · Discover",
+    title: "Search without limits",
+    description: "Find any IATA airport, select your dates, and choose the exact airline you want.",
+    color: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
   },
   {
     icon: Ticket,
-    title: "Book in minutes",
-    description: "Add passenger details and extras, then confirm — no payment step, it's completely free.",
+    eyebrow: "02 · Personalize",
+    title: "Make the fare yours",
+    description: "Set your cabin, passengers, extras, and preferred price in one simple flow.",
+    color: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
   },
   {
     icon: PlaneTakeoff,
-    title: "Fly with confidence",
-    description: "Get a QR-verified boarding pass, PDF itinerary, and manage or rebook anytime.",
+    eyebrow: "03 · Travel",
+    title: "Keep every detail close",
+    description: "Download your full itinerary, access your boarding pass, and manage the booking anytime.",
+    color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mb-12 text-center">
-        <h2 className="text-2xl font-bold sm:text-3xl">How it works</h2>
-        <p className="mt-2 text-foreground/60">From search to boarding pass in three simple steps</p>
+    <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+      <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">Simple by design</p>
+          <h2 className="mt-3 max-w-xl text-3xl font-bold tracking-tight sm:text-4xl">From an idea to an itinerary in minutes.</h2>
+        </div>
+        <p className="max-w-sm text-sm leading-6 text-foreground/55">Everything you need to shape, confirm, and revisit your journey in one place.</p>
       </div>
 
-      <div className="relative grid grid-cols-1 gap-10 sm:grid-cols-3">
-        <div className="pointer-events-none absolute left-0 right-0 top-8 hidden border-t-2 border-dashed border-black/10 dark:border-white/10 sm:block" />
-
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {steps.map((step, idx) => (
-          <motion.div
+          <motion.article
             key={step.title}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: idx * 0.12 }}
-            className="relative flex flex-col items-center text-center"
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.45, delay: idx * 0.1 }}
+            className="group relative overflow-hidden rounded-3xl border border-black/[0.07] bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-white/[0.04]"
           >
-            <span className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white text-brand-600 shadow-md ring-1 ring-black/8 dark:bg-background dark:text-brand-400 dark:ring-white/10">
-              <step.icon size={26} />
-              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gold-500 text-xs font-bold text-white shadow">
-                {idx + 1}
-              </span>
-            </span>
-            <h3 className="mt-4 font-semibold">{step.title}</h3>
-            <p className="mt-1.5 max-w-xs text-sm text-foreground/60">{step.description}</p>
-          </motion.div>
+            <div className="flex items-start justify-between">
+              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${step.color}`}><step.icon size={22} /></span>
+              <ArrowUpRight size={18} className="text-foreground/25 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-500" />
+            </div>
+            <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/40">{step.eyebrow}</p>
+            <h3 className="mt-2 text-xl font-semibold">{step.title}</h3>
+            <p className="mt-3 text-sm leading-6 text-foreground/55">{step.description}</p>
+            <div className="absolute -bottom-12 -right-12 h-28 w-28 rounded-full bg-brand-500/5 transition group-hover:scale-150" />
+          </motion.article>
         ))}
       </div>
     </section>
