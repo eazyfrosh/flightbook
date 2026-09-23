@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t border-black/8 bg-black/[0.02] dark:border-white/10 dark:bg-white/[0.02]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
           <div className="col-span-2 sm:col-span-1">
             <div className="flex items-center gap-2 font-semibold">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
@@ -32,12 +32,6 @@ export function Footer() {
               <li><Link href="/dashboard" className="hover:text-foreground">My Trips</Link></li>
               <li><Link href="/auth/login" className="hover:text-foreground">Log in</Link></li>
               <li><Link href="/auth/signup" className="hover:text-foreground">Sign up</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold">SkyBook</h4>
-            <ul className="mt-3 space-y-2 text-sm text-foreground/60">
-              <li><Link href="/admin" className="hover:text-foreground">Admin panel</Link></li>
             </ul>
           </div>
         </div>
