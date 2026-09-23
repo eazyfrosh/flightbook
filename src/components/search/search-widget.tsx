@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import type { CabinClass, PassengerCounts, TripType } from "@/types";
 import { useSearchHistoryStore } from "@/lib/store/search-history-store";
 import { cn } from "@/lib/utils";
+import { airlines } from "@/lib/data/airlines";
 
 const TRIP_TYPES: { value: TripType; label: string }[] = [
   { value: "one_way", label: "One-way" },
@@ -44,6 +45,8 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
   const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState<PassengerCounts>({ adults: 1, children: 0, infants: 0 });
   const [cabin, setCabin] = useState<CabinClass>("economy");
+  const [preferredAirlineId, setPreferredAirlineId] = useState("");
+  const [customPrice, setCustomPrice] = useState("");
   const [segments, setSegments] = useState<MultiSegment[]>(blankSegments);
   const [autoFocusFrom, setAutoFocusFrom] = useState(false);
 
@@ -63,6 +66,13 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
   }
 
   function submit() {
+    const enteredPrice = customPrice.trim() ? Number(customPrice) : undefined;
+    const parsedPrice = enteredPrice === undefined ? undefined : Math.round(enteredPrice * 100) / 100;
+    if (parsedPrice !== undefined && (!Number.isFinite(parsedPrice) || parsedPrice <= 0 || parsedPrice > 1_000_000)) {
+      toast.error("Enter a flight price between $1 and $1,000,000.");
+      return;
+    }
+
     if (tripType === "multi_city") {
       const incomplete = segments.some((s) => !s.from || !s.to || !s.date);
       if (incomplete) {
@@ -88,6 +98,8 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
     params.set("tripType", tripType);
     params.set("passengers", JSON.stringify(passengers));
     params.set("cabin", cabin);
+    if (preferredAirlineId) params.set("airline", preferredAirlineId);
+    if (parsedPrice !== undefined) params.set("price", parsedPrice.toFixed(2));
 
     if (tripType === "multi_city") {
       params.set("segments", JSON.stringify(segments));
@@ -99,7 +111,16 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
       params.set("to", to);
       params.set("departureDate", departureDate);
       if (tripType === "round_trip") params.set("returnDate", returnDate);
-      addSearch({ from, to, departureDate, cabin, tripType, timestamp: Date.now() });
+      addSearch({
+        from,
+        to,
+        departureDate,
+        cabin,
+        tripType,
+        preferredAirlineId: preferredAirlineId || undefined,
+        customPrice: parsedPrice,
+        timestamp: Date.now(),
+      });
     }
 
     router.push(`/search?${params.toString()}`);
@@ -222,6 +243,45 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
           )}
         </div>
       )}
+
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-foreground/50" htmlFor="preferred-airline">
+            Preferred airline
+          </label>
+          <select
+            id="preferred-airline"
+            value={preferredAirlineId}
+            onChange={(event) => setPreferredAirlineId(event.target.value)}
+            className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-3 text-sm outline-none focus:border-brand-400 dark:border-white/15 dark:bg-neutral-900"
+          >
+            <option value="">Any airline</option>
+            {airlines.map((airline) => (
+              <option key={airline.id} value={airline.id}>{airline.name} ({airline.code})</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-foreground/50" htmlFor="custom-flight-price">
+            Flight price per passenger (USD)
+          </label>
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-sm text-foreground/50">$</span>
+            <input
+              id="custom-flight-price"
+              type="number"
+              inputMode="decimal"
+              min="1"
+              max="1000000"
+              step="0.01"
+              value={customPrice}
+              onChange={(event) => setCustomPrice(event.target.value)}
+              placeholder="Use generated fares"
+              className="w-full rounded-xl border border-black/10 bg-white py-3 pl-7 pr-3.5 text-sm outline-none focus:border-brand-400 dark:border-white/15 dark:bg-neutral-900"
+            />
+          </div>
+        </div>
+      </div>
 
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto]">
         <PassengerCabinSelect passengers={passengers} cabin={cabin} onChange={(p, c) => { setPassengers(p); setCabin(c); }} />
