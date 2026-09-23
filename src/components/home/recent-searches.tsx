@@ -5,7 +5,7 @@ import { History } from "lucide-react";
 import { useSearchHistoryStore } from "@/lib/store/search-history-store";
 import { findAirport } from "@/lib/data/airports";
 import { Card } from "@/components/ui/card";
-import { findAirline } from "@/lib/data/airlines";
+import { resolveAirline } from "@/lib/data/airlines";
 import { formatCurrency } from "@/lib/utils";
 
 export function RecentSearches() {
@@ -24,7 +24,7 @@ export function RecentSearches() {
         {recentSearches.map((s, idx) => {
           const from = findAirport(s.from);
           const to = findAirport(s.to);
-          const airline = s.preferredAirlineId ? findAirline(s.preferredAirlineId) : undefined;
+          const airline = s.preferredAirlineId ? resolveAirline(s.preferredAirlineId) : undefined;
           return (
             <Card
               key={idx}
@@ -38,7 +38,7 @@ export function RecentSearches() {
                   cabin: s.cabin,
                   passengers: JSON.stringify({ adults: 1, children: 0, infants: 0 }),
                 });
-                if (airline) params.set("airline", airline.id);
+                if (s.preferredAirlineId) params.set("airline", s.preferredAirlineId);
                 if (s.customPrice !== undefined) params.set("price", s.customPrice.toFixed(2));
                 router.push(`/search?${params.toString()}`);
               }}

@@ -16,7 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useBookingStore } from "@/lib/store/booking-store";
 import { RebookingBanner } from "@/components/booking/rebooking-banner";
 import { formatCurrency, formatDateLong } from "@/lib/utils";
-import { findAirline } from "@/lib/data/airlines";
+import { resolveAirline } from "@/lib/data/airlines";
 import { useEffect } from "react";
 
 interface Leg {
@@ -55,7 +55,7 @@ export function SearchResultsClient() {
   const tripType = (params.get("tripType") as TripType) || "one_way";
   const cabin = (params.get("cabin") as CabinClass) || "economy";
   const preferredAirlineId = params.get("airline") || undefined;
-  const preferredAirline = preferredAirlineId ? findAirline(preferredAirlineId) : undefined;
+  const preferredAirline = preferredAirlineId ? resolveAirline(preferredAirlineId) : undefined;
   const priceParam = params.get("price");
   const parsedPrice = priceParam ? Number(priceParam) : undefined;
   const customPrice = parsedPrice !== undefined && Number.isFinite(parsedPrice) && parsedPrice > 0 && parsedPrice <= 1_000_000
@@ -126,7 +126,7 @@ export function SearchResultsClient() {
       departureDate: legs[0]?.date ?? "",
       passengers,
       cabin,
-      preferredAirlineId: preferredAirline?.id,
+      preferredAirlineId,
       customPrice,
     });
     clearItinerary();
@@ -152,11 +152,11 @@ export function SearchResultsClient() {
       departureDate: currentLeg.date,
       passengers,
       cabin,
-      preferredAirlineId: preferredAirline?.id,
+      preferredAirlineId,
       customPrice,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentLeg?.from, currentLeg?.to, currentLeg?.date, cabin, preferredAirline?.id, customPrice]);
+  }, [currentLeg?.from, currentLeg?.to, currentLeg?.date, cabin, preferredAirlineId, customPrice]);
 
   const priceCeiling = useMemo(
     () => Math.max(500, ...rawFlights.map((f) => Math.ceil(f.price / 50) * 50)),

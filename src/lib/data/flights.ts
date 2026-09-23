@@ -1,4 +1,4 @@
-import { airlines, findAirline } from "./airlines";
+import { airlines, resolveAirline } from "./airlines";
 import { findAirport } from "./airports";
 import type { CabinClass, Flight, FlightSearchParams, FlightSegment } from "@/types";
 import { hashString, seedRandom } from "@/lib/utils";
@@ -27,9 +27,9 @@ function buildSegment(
   origin: string,
   destination: string,
   departure: Date,
-  preferredAirlineId?: string
+  preferredAirline?: string
 ): FlightSegment {
-  const airline = (preferredAirlineId && findAirline(preferredAirlineId)) || airlines[Math.floor(rand() * airlines.length)];
+  const airline = (preferredAirline && resolveAirline(preferredAirline)) || airlines[Math.floor(rand() * airlines.length)];
   const baseDuration = distanceEstimate(origin, destination);
   const jitter = Math.floor(rand() * 40) - 20;
   const durationMinutes = Math.max(45, baseDuration + jitter);

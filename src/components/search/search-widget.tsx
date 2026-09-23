@@ -45,7 +45,7 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
   const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState<PassengerCounts>({ adults: 1, children: 0, infants: 0 });
   const [cabin, setCabin] = useState<CabinClass>("economy");
-  const [preferredAirlineId, setPreferredAirlineId] = useState("");
+  const [preferredAirline, setPreferredAirline] = useState("");
   const [customPrice, setCustomPrice] = useState("");
   const [segments, setSegments] = useState<MultiSegment[]>(blankSegments);
   const [autoFocusFrom, setAutoFocusFrom] = useState(false);
@@ -98,7 +98,8 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
     params.set("tripType", tripType);
     params.set("passengers", JSON.stringify(passengers));
     params.set("cabin", cabin);
-    if (preferredAirlineId) params.set("airline", preferredAirlineId);
+    const enteredAirline = preferredAirline.trim().slice(0, 80);
+    if (enteredAirline) params.set("airline", enteredAirline);
     if (parsedPrice !== undefined) params.set("price", parsedPrice.toFixed(2));
 
     if (tripType === "multi_city") {
@@ -117,7 +118,7 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
         departureDate,
         cabin,
         tripType,
-        preferredAirlineId: preferredAirlineId || undefined,
+        preferredAirlineId: enteredAirline || undefined,
         customPrice: parsedPrice,
         timestamp: Date.now(),
       });
@@ -244,22 +245,31 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
         </div>
       )}
 
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <section className="mt-4 rounded-2xl border border-brand-200 bg-brand-50/60 p-4 dark:border-brand-500/20 dark:bg-brand-500/5">
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold">Customize your flight</h3>
+          <p className="mt-0.5 text-xs text-foreground/55">Type any airline and set the exact price per passenger.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-foreground/50" htmlFor="preferred-airline">
-            Preferred airline
+            Enter airline
           </label>
-          <select
+          <input
             id="preferred-airline"
-            value={preferredAirlineId}
-            onChange={(event) => setPreferredAirlineId(event.target.value)}
+            type="text"
+            list="airline-suggestions"
+            value={preferredAirline}
+            onChange={(event) => setPreferredAirline(event.target.value)}
+            placeholder="e.g. American Airlines or Delta"
+            maxLength={80}
             className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-3 text-sm outline-none focus:border-brand-400 dark:border-white/15 dark:bg-neutral-900"
-          >
-            <option value="">Any airline</option>
+          />
+          <datalist id="airline-suggestions">
             {airlines.map((airline) => (
-              <option key={airline.id} value={airline.id}>{airline.name} ({airline.code})</option>
+              <option key={airline.id} value={airline.name}>{airline.code}</option>
             ))}
-          </select>
+          </datalist>
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-foreground/50" htmlFor="custom-flight-price">
@@ -281,7 +291,8 @@ export function SearchWidget({ compact = false }: { compact?: boolean }) {
             />
           </div>
         </div>
-      </div>
+        </div>
+      </section>
 
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto]">
         <PassengerCabinSelect passengers={passengers} cabin={cabin} onChange={(p, c) => { setPassengers(p); setCabin(c); }} />
