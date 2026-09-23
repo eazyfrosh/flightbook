@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Plane } from "lucide-react";
+import { ArrowLeft, Mail, Plane, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AirlineLogo } from "@/components/ui/airline-logo";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -16,9 +17,13 @@ export default function EmailPreviewPage() {
   const { bookingId } = useParams<{ bookingId: string }>();
   const router = useRouter();
   const [booking, setBooking] = useState<Booking | null | undefined>(undefined);
+  const [recipientEmail, setRecipientEmail] = useState("");
 
   useEffect(() => {
-    getBooking(bookingId).then(setBooking);
+    getBooking(bookingId).then((foundBooking) => {
+      setBooking(foundBooking);
+      if (foundBooking) setRecipientEmail(foundBooking.passengers[0]?.email ?? "");
+    });
   }, [bookingId]);
 
   if (booking === undefined) {
@@ -33,8 +38,39 @@ export default function EmailPreviewPage() {
     );
   }
 
-  const recipient = booking.passengers[0]?.email ?? "guest@example.com";
   const extraLineItems = extrasLineItems(booking.extras);
+
+  function sendEmail() {
+    if (!booking) return;
+    const recipient = recipientEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
+      toast.error("Enter a valid recipient email address.");
+      return;
+    }
+
+    const flightSummary = booking.flights
+      .map((flight) => {
+        const first = flight.segments[0];
+        const last = flight.segments[flight.segments.length - 1];
+        return `${first.airline.name}: ${first.originCode} to ${last.destinationCode} on ${formatDateLong(first.departureTime)}`;
+      })
+      .join("\n");
+    const subject = `Your SkyBook itinerary — confirmation ${booking.bookingReference}`;
+    const body = [
+      `Hi ${booking.passengers[0]?.firstName ?? "traveler"},`,
+      "",
+      `Your SkyBook booking ${booking.bookingReference} is confirmed.`,
+      "",
+      flightSummary,
+      "",
+      `Total: ${formatCurrency(booking.totalPrice, booking.currency)}`,
+      "",
+      "Safe travels!",
+      "The SkyBook team",
+    ].join("\n");
+
+    window.location.href = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
@@ -44,14 +80,36 @@ export default function EmailPreviewPage() {
         </Link>
       </div>
 
-      <p className="no-print mb-3 text-center text-xs text-foreground/40">
-        Preview of the confirmation email — no email is actually sent.
-      </p>
+      <section className="no-print mb-5 rounded-2xl border border-brand-200 bg-brand-50/70 p-4 dark:border-brand-500/20 dark:bg-brand-500/5">
+        <div className="mb-3 flex items-center gap-2">
+          <Mail size={18} className="text-brand-600 dark:text-brand-400" />
+          <div>
+            <h1 className="text-sm font-semibold">Send confirmation email</h1>
+            <p className="text-xs text-foreground/55">Enter the email address that should receive this itinerary.</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <label className="sr-only" htmlFor="recipient-email">Recipient email</label>
+          <input
+            id="recipient-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={recipientEmail}
+            onChange={(event) => setRecipientEmail(event.target.value)}
+            placeholder="name@example.com"
+            className="min-w-0 flex-1 rounded-xl border border-black/10 bg-white px-3.5 py-3 text-sm outline-none focus:border-brand-400 dark:border-white/15 dark:bg-neutral-900"
+          />
+          <Button type="button" onClick={sendEmail} className="sm:w-auto">
+            <Send size={16} /> Send email
+          </Button>
+        </div>
+      </section>
 
       <div className="overflow-hidden rounded-2xl border border-black/10 shadow-lg dark:border-white/10">
         <div className="space-y-1 bg-black/[0.03] px-5 py-4 text-xs text-foreground/60 dark:bg-white/5">
           <p><span className="font-semibold text-foreground/80">From:</span> SkyBook &lt;no-reply@skybook.com&gt;</p>
-          <p><span className="font-semibold text-foreground/80">To:</span> {recipient}</p>
+          <p><span className="font-semibold text-foreground/80">To:</span> {recipientEmail.trim() || "Enter a recipient above"}</p>
           <p><span className="font-semibold text-foreground/80">Subject:</span> Your SkyBook itinerary — confirmation {booking.bookingReference}</p>
         </div>
 
@@ -66,7 +124,7 @@ export default function EmailPreviewPage() {
           <div className="px-6 py-6">
             <p className="text-sm text-foreground/70">Hi {booking.passengers[0]?.firstName ?? "traveler"},</p>
             <p className="mt-2 text-sm text-foreground/70">
-              Thanks for booking with SkyBook. Here&apos;s your itinerary for your records — this is a preview only, nothing was really sent.
+              Thanks for booking with SkyBook. Here&apos;s your itinerary for your records.
             </p>
 
             <div className="mt-5 rounded-xl bg-black/[0.02] p-4 text-center dark:bg-white/5">
@@ -140,7 +198,7 @@ export default function EmailPreviewPage() {
           </div>
 
           <div className="border-t border-black/8 bg-black/[0.02] px-6 py-4 text-center text-[11px] text-foreground/40 dark:border-white/10 dark:bg-white/5">
-            SkyBook · Preview only. No real flights, emails, or payments are involved.
+            SkyBook · Booking confirmation
           </div>
         </div>
       </div>
