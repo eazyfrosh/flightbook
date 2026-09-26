@@ -12,6 +12,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QRCodeImage } from "@/components/booking/qr-code";
 import { getBookingByReferenceAndToken } from "@/lib/services/bookings";
+import { getEazyToolsVerificationBooking } from "@/lib/services/eazytools-verification";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { bookingStatusLabel, bookingStatusTone } from "@/lib/data/booking-status";
 import { getVerificationUrl } from "@/lib/booking/verification-url";
@@ -25,7 +26,21 @@ export default function VerifyBookingPage() {
   const [booking, setBooking] = useState<Booking | null | undefined>(undefined);
 
   useEffect(() => {
-    getBookingByReferenceAndToken(decodeURIComponent(reference), token).then(setBooking);
+    const decodedReference = decodeURIComponent(reference);
+    let active = true;
+    void (async () => {
+      let resolved: Booking | null = null;
+      try {
+        resolved = await getBookingByReferenceAndToken(decodedReference, token);
+      } catch {
+        // A standalone deployment may not share EazyTools' Firebase project.
+      }
+      resolved ??= await getEazyToolsVerificationBooking(decodedReference, token);
+      if (active) setBooking(resolved);
+    })();
+    return () => {
+      active = false;
+    };
   }, [reference, token]);
 
   if (booking === undefined) {
