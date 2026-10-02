@@ -73,6 +73,9 @@ export interface FlightSearchParams {
   customDepartureTime?: string;
   customArrivalTime?: string;
   customDurationMinutes?: number;
+  returnDepartureTime?: string;
+  returnArrivalTime?: string;
+  returnDurationMinutes?: number;
 }
 
 export interface PassengerInfo {
@@ -178,6 +181,9 @@ export interface RecentSearch {
   customDepartureTime?: string;
   customArrivalTime?: string;
   customDurationMinutes?: number;
+  returnDepartureTime?: string;
+  returnArrivalTime?: string;
+  returnDurationMinutes?: number;
   timestamp: number;
 }
 

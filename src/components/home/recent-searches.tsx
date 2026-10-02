@@ -43,6 +43,9 @@ export function RecentSearches() {
                 if (s.customDepartureTime) params.set("departureTime", s.customDepartureTime);
                 if (s.customArrivalTime) params.set("arrivalTime", s.customArrivalTime);
                 if (s.customDurationMinutes) params.set("duration", String(s.customDurationMinutes));
+                if (s.returnDepartureTime) params.set("returnDepartureTime", s.returnDepartureTime);
+                if (s.returnArrivalTime) params.set("returnArrivalTime", s.returnArrivalTime);
+                if (s.returnDurationMinutes) params.set("returnDuration", String(s.returnDurationMinutes));
                 router.push(`/search?${params.toString()}`);
               }}
             >
@@ -67,6 +70,13 @@ export function RecentSearches() {
               {s.customDurationMinutes && (
                 <p className="mt-1 text-xs text-foreground/50">
                   Duration {formatDuration(s.customDurationMinutes)}
+                </p>
+              )}
+              {(s.returnDepartureTime || s.returnArrivalTime || s.returnDurationMinutes) && (
+                <p className="mt-1 text-xs text-foreground/50">
+                  Return{s.returnDepartureTime ? ` ${s.returnDepartureTime}` : ""}
+                  {s.returnArrivalTime ? ` → ${s.returnArrivalTime}` : ""}
+                  {s.returnDurationMinutes ? ` · ${formatDuration(s.returnDurationMinutes)}` : ""}
                 </p>
               )}
             </Card>
