@@ -1,4 +1,5 @@
 import { getAll, getOne, queryByField, remove, upsert } from "@/lib/services/store";
+import { getEazyToolsBookingStatus } from "@/lib/services/eazytools-verification";
 import { generateVerificationToken } from "@/lib/utils";
 import type { Booking, BookingStatusSummary } from "@/types";
 
@@ -125,8 +126,13 @@ export async function findBookingByReferenceAndName(
 export async function findBookingStatusByReference(reference: string): Promise<BookingStatusSummary | null> {
   const ref = reference.trim().toUpperCase();
   if (!/^[A-Z0-9-]{4,32}$/.test(ref)) return null;
-  const booking = await getOne<Booking>(LOOKUP_COLLECTION, ref);
-  return booking ? statusSummary(booking) : null;
+  try {
+    const booking = await getOne<Booking>(LOOKUP_COLLECTION, ref);
+    if (booking) return statusSummary(booking);
+  } catch {
+    // A standalone deployment may not share FlightBook's Firebase project.
+  }
+  return getEazyToolsBookingStatus(ref);
 }
 
 /**
