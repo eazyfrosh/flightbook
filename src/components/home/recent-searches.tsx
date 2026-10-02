@@ -6,7 +6,7 @@ import { useSearchHistoryStore } from "@/lib/store/search-history-store";
 import { findAirport } from "@/lib/data/airports";
 import { Card } from "@/components/ui/card";
 import { resolveAirline } from "@/lib/data/airlines";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDuration } from "@/lib/utils";
 
 export function RecentSearches() {
   const recentSearches = useSearchHistoryStore((s) => s.recentSearches);
@@ -42,6 +42,7 @@ export function RecentSearches() {
                 if (s.customPrice !== undefined) params.set("price", s.customPrice.toFixed(2));
                 if (s.customDepartureTime) params.set("departureTime", s.customDepartureTime);
                 if (s.customArrivalTime) params.set("arrivalTime", s.customArrivalTime);
+                if (s.customDurationMinutes) params.set("duration", String(s.customDurationMinutes));
                 router.push(`/search?${params.toString()}`);
               }}
             >
@@ -61,6 +62,11 @@ export function RecentSearches() {
                 <p className="mt-1 text-xs text-foreground/50">
                   {s.customDepartureTime ? `Departs ${s.customDepartureTime}` : "Generated departure"}
                   {s.customArrivalTime ? ` · Arrives ${s.customArrivalTime}` : ""}
+                </p>
+              )}
+              {s.customDurationMinutes && (
+                <p className="mt-1 text-xs text-foreground/50">
+                  Duration {formatDuration(s.customDurationMinutes)}
                 </p>
               )}
             </Card>
