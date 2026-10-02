@@ -1,6 +1,6 @@
 import { getAll, getOne, queryByField, remove, upsert } from "@/lib/services/store";
 import { generateVerificationToken } from "@/lib/utils";
-import type { Booking } from "@/types";
+import type { Booking, BookingStatusSummary } from "@/types";
 
 const COLLECTION = "bookings";
 const LOOKUP_COLLECTION = "bookingLookup";
@@ -12,6 +12,17 @@ function lookupId(booking: Booking) {
 
 function verificationId(booking: Booking) {
   return `${lookupId(booking)}_${booking.verificationToken}`;
+}
+
+function statusSummary(booking: Booking): BookingStatusSummary {
+  return {
+    bookingReference: lookupId(booking),
+    status: booking.status,
+    flights: booking.flights,
+    gate: booking.gate,
+    terminal: booking.terminal,
+    boardingTime: booking.boardingTime,
+  };
 }
 
 /**
@@ -105,6 +116,17 @@ export async function findBookingByReferenceAndName(
   const booking = await getOne<Booking>(LOOKUP_COLLECTION, ref);
   if (!booking) return null;
   return booking.passengers.some((p) => p.lastName.trim().toLowerCase() === name) ? booking : null;
+}
+
+/**
+ * Public flight-status lookup by an exact booking reference. Only the
+ * itinerary and operational status are returned to the page.
+ */
+export async function findBookingStatusByReference(reference: string): Promise<BookingStatusSummary | null> {
+  const ref = reference.trim().toUpperCase();
+  if (!/^[A-Z0-9-]{4,32}$/.test(ref)) return null;
+  const booking = await getOne<Booking>(LOOKUP_COLLECTION, ref);
+  return booking ? statusSummary(booking) : null;
 }
 
 /**

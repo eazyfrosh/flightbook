@@ -1,134 +1,159 @@
 "use client";
 
 import { useState } from "react";
-import { PlaneTakeoff, Search } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, PlaneTakeoff, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { AirlineLogo } from "@/components/ui/airline-logo";
-import { airlines } from "@/lib/data/airlines";
-import { airports } from "@/lib/data/airports";
-import { formatDateLong, formatTime, hashString, seedRandom } from "@/lib/utils";
-import type { FlightStatusValue } from "@/types";
-
-const STATUSES: FlightStatusValue[] = ["scheduled", "boarding", "departed", "landed", "delayed", "cancelled"];
-
-const statusTone: Record<FlightStatusValue, "brand" | "gold" | "green" | "red" | "neutral"> = {
-  scheduled: "brand",
-  boarding: "gold",
-  departed: "brand",
-  landed: "green",
-  delayed: "gold",
-  cancelled: "red",
-};
-
-interface StatusResult {
-  flightNumber: string;
-  airline: (typeof airlines)[number];
-  origin: (typeof airports)[number];
-  destination: (typeof airports)[number];
-  status: FlightStatusValue;
-  departureTime: string;
-  arrivalTime: string;
-  gate: string;
-  terminal: string;
-}
-
-function lookupFlight(flightNumber: string, date: string): StatusResult | null {
-  const cleaned = flightNumber.trim().toUpperCase().replace(/\s+/g, "");
-  if (!cleaned) return null;
-  const codeMatch = cleaned.match(/^[A-Z]{2}/);
-  const airline =
-    (codeMatch && airlines.find((a) => a.code === codeMatch[0])) ||
-    airlines[hashString(cleaned) % airlines.length];
-
-  const rand = seedRandom(hashString(`${cleaned}-${date}`) || 1);
-  const origin = airports[Math.floor(rand() * airports.length)];
-  let destination = airports[Math.floor(rand() * airports.length)];
-  if (destination.code === origin.code) destination = airports[(airports.indexOf(destination) + 1) % airports.length];
-
-  const status = STATUSES[Math.floor(rand() * STATUSES.length)];
-  const base = new Date(`${date}T00:00:00`);
-  base.setHours(4 + Math.floor(rand() * 18), Math.floor(rand() * 12) * 5, 0, 0);
-  const duration = 90 + Math.floor(rand() * 600);
-  const arrival = new Date(base.getTime() + duration * 60000);
-
-  return {
-    flightNumber: cleaned,
-    airline,
-    origin,
-    destination,
-    status,
-    departureTime: base.toISOString(),
-    arrivalTime: arrival.toISOString(),
-    gate: `${"ABCDEFG"[Math.floor(rand() * 7)]}${1 + Math.floor(rand() * 40)}`,
-    terminal: String(1 + Math.floor(rand() * 5)),
-  };
-}
+import { findAirport } from "@/lib/data/airports";
+import { bookingStatusLabel, bookingStatusTone } from "@/lib/data/booking-status";
+import { findBookingStatusByReference } from "@/lib/services/bookings";
+import { cabinLabel, formatDateLong, formatTime } from "@/lib/utils";
+import type { BookingStatusSummary } from "@/types";
 
 export default function FlightStatusPage() {
-  const [flightNumber, setFlightNumber] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [result, setResult] = useState<StatusResult | null | undefined>(undefined);
+  const [bookingReference, setBookingReference] = useState("");
+  const [result, setResult] = useState<BookingStatusSummary | null | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSearch() {
-    setResult(lookupFlight(flightNumber, date));
+  async function handleSearch() {
+    const reference = bookingReference.trim().toUpperCase();
+    if (!/^[A-Z0-9-]{4,32}$/.test(reference)) {
+      setError("Enter a valid booking number.");
+      setResult(undefined);
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      setResult(await findBookingStatusByReference(reference));
+    } catch {
+      setResult(undefined);
+      setError("Flight status could not be loaded. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold">Flight status</h1>
-        <p className="mt-1 text-sm text-foreground/60">Simulated status lookup — enter any flight number, e.g. AA123.</p>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mb-7 text-center">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+          <PlaneTakeoff size={23} />
+        </span>
+        <h1 className="mt-3 text-2xl font-bold">Track your flight itinerary</h1>
+        <p className="mt-1 text-sm text-foreground/60">Paste your booking number to see its current status, route, date, and times.</p>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="flex-1">
-          <Label>Flight number</Label>
-          <Input value={flightNumber} onChange={(e) => setFlightNumber(e.target.value)} placeholder="AA123" />
-        </div>
-        <div>
-          <Label>Date</Label>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        </div>
-        <Button onClick={handleSearch}>
-          <Search size={16} /> Check status
-        </Button>
-      </div>
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <Label htmlFor="booking-reference">Booking number</Label>
+              <Input
+                id="booking-reference"
+                value={bookingReference}
+                onChange={(event) => setBookingReference(event.target.value.toUpperCase())}
+                onKeyDown={(event) => { if (event.key === "Enter") void handleSearch(); }}
+                placeholder="e.g. AB12CD"
+                autoComplete="off"
+                maxLength={32}
+              />
+            </div>
+            <Button onClick={() => void handleSearch()} disabled={loading}>
+              <Search size={16} /> {loading ? "Checking…" : "Track itinerary"}
+            </Button>
+          </div>
+          {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        </CardContent>
+      </Card>
 
       {result === null && (
-        <p className="mt-8 text-center text-sm text-foreground/50">Enter a flight number to see its status.</p>
+        <Card className="mt-6">
+          <CardContent className="p-8 text-center">
+            <p className="font-semibold">Booking not found</p>
+            <p className="mt-1 text-sm text-foreground/55">Check the booking number and try again.</p>
+          </CardContent>
+        </Card>
       )}
 
       {result && (
-        <Card className="mt-8">
-          <CardContent className="p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AirlineLogo airline={result.airline} />
-                <div>
-                  <p className="font-semibold">{result.airline.name}</p>
-                  <p className="text-xs text-foreground/50">Flight {result.flightNumber} · {formatDateLong(result.departureTime)}</p>
-                </div>
-              </div>
-              <Badge tone={statusTone[result.status]} className="capitalize">{result.status}</Badge>
-            </div>
-
-            <div className="flex items-center justify-between">
+        <div className="mt-6 space-y-4">
+          <Card>
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
               <div>
-                <p className="text-2xl font-bold">{formatTime(result.departureTime)}</p>
-                <p className="text-sm text-foreground/60">{result.origin.city} ({result.origin.code})</p>
-                <p className="text-xs text-foreground/40">Terminal {result.terminal} · Gate {result.gate}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-foreground/45">Booking number</p>
+                <p className="font-mono text-2xl font-bold tracking-widest text-brand-700 dark:text-brand-300">{result.bookingReference}</p>
               </div>
-              <PlaneTakeoff className="text-foreground/30" size={22} />
-              <div className="text-right">
-                <p className="text-2xl font-bold">{formatTime(result.arrivalTime)}</p>
-                <p className="text-sm text-foreground/60">{result.destination.city} ({result.destination.code})</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <Badge tone={bookingStatusTone(result.status)} className="capitalize">{bookingStatusLabel(result.status)}</Badge>
+            </CardContent>
+          </Card>
+
+          {result.flights.map((flight, flightIndex) => {
+            const first = flight.segments[0];
+            const last = flight.segments[flight.segments.length - 1];
+            return (
+              <Card key={flight.id}>
+                <CardContent className="p-0">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/8 px-5 py-4 dark:border-white/10">
+                    <div className="flex items-center gap-3">
+                      <AirlineLogo airline={first.airline} size={34} />
+                      <div>
+                        <p className="font-semibold">{flightIndex === 0 ? "Outbound itinerary" : flightIndex === 1 ? "Return itinerary" : `Flight ${flightIndex + 1}`}</p>
+                        <p className="text-xs text-foreground/50">{first.airline.name} · {cabinLabel(flight.cabin)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm text-foreground/60">
+                      <CalendarDays size={15} /> {formatDateLong(first.departureTime)}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 p-5">
+                    {flight.segments.map((segment) => {
+                      const origin = findAirport(segment.originCode);
+                      const destination = findAirport(segment.destinationCode);
+                      return (
+                        <div key={segment.id} className="rounded-xl border border-black/8 p-4 dark:border-white/10">
+                          <div className="mb-4 flex items-center justify-between text-xs text-foreground/50">
+                            <span>{segment.airline.name} {segment.flightNumber}</span>
+                            <span>{segment.aircraft}</span>
+                          </div>
+                          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                            <div>
+                              <p className="text-2xl font-bold">{formatTime(segment.departureTime)}</p>
+                              <p className="font-semibold text-brand-700 dark:text-brand-300">{segment.originCode}</p>
+                              <p className="text-xs text-foreground/50">{origin?.city ?? segment.originCode}</p>
+                            </div>
+                            <div className="flex items-center text-foreground/30">
+                              <span className="hidden h-px w-10 bg-current sm:block" />
+                              <PlaneTakeoff className="mx-2" size={18} />
+                              <span className="hidden h-px w-10 bg-current sm:block" />
+                            </div>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold">{formatTime(segment.arrivalTime)}</p>
+                              <p className="font-semibold text-brand-700 dark:text-brand-300">{segment.destinationCode}</p>
+                              <p className="text-xs text-foreground/50">{destination?.city ?? segment.destinationCode}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <div className="flex flex-wrap gap-4 text-sm text-foreground/60">
+                      <span className="inline-flex items-center gap-1.5"><Clock3 size={14} /> Departs {formatTime(first.departureTime)} · Arrives {formatTime(last.arrivalTime)}</span>
+                      {(result.terminal || result.gate) && (
+                        <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {result.terminal ? `Terminal ${result.terminal}` : ""}{result.terminal && result.gate ? " · " : ""}{result.gate ? `Gate ${result.gate}` : ""}</span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       )}
     </div>
   );
