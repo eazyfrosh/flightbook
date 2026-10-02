@@ -73,7 +73,7 @@ function ExtrasForm() {
       await updateBooking(rebooked);
       setConfirming(false);
       reset();
-      toast.success("Booking rebooked successfully!");
+      toast.success("Booking updated successfully!");
       router.push(`/booking/confirmation/${rebooked.id}`);
       return;
     }
@@ -208,10 +208,10 @@ function ExtrasForm() {
           <div className="flex justify-end">
             <Button size="lg" onClick={handleConfirm} disabled={confirming}>
               {confirming ? (
-                rebookingBookingId ? "Rebooking…" : "Confirming booking…"
+                rebookingBookingId ? "Saving changes…" : "Confirming booking…"
               ) : (
                 <>
-                  <CheckCircle2 size={17} /> {rebookingBookingId ? "Confirm rebooking" : "Confirm booking"}
+                  <CheckCircle2 size={17} /> {rebookingBookingId ? "Save booking changes" : "Confirm booking"}
                 </>
               )}
             </Button>
