@@ -1,11 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Globe2, MapPin, Plane, ShieldCheck } from "lucide-react";
-import { SearchWidget } from "@/components/search/search-widget";
-import { cn } from "@/lib/utils";
 
 const benefits = [
   { icon: Globe2, label: "9,000+ airports" },
@@ -13,30 +10,7 @@ const benefits = [
   { icon: ShieldCheck, label: "Manage trips anytime" },
 ];
 
-const popularRoutes = [
-  { label: "London", code: "LHR" },
-  { label: "Dubai", code: "DXB" },
-  { label: "New York", code: "JFK" },
-  { label: "Lagos", code: "LOS" },
-];
-
-function futureDate(days: number) {
-  return new Date(Date.now() + days * 864e5).toISOString().slice(0, 10);
-}
-
 export function Hero() {
-  const searchRef = useRef<HTMLDivElement>(null);
-  const [highlighted, setHighlighted] = useState(false);
-
-  useEffect(() => {
-    if (window.location.hash === "#search-widget") {
-      searchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      setHighlighted(true);
-      const timeout = setTimeout(() => setHighlighted(false), 1800);
-      return () => clearTimeout(timeout);
-    }
-  }, []);
-
   return (
     <section className="relative isolate overflow-hidden bg-[#071a36] pb-20 text-white sm:pb-24">
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -57,9 +31,9 @@ export function Hero() {
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <a href="#search-widget" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#071a36] shadow-xl shadow-black/15 transition hover:-translate-y-0.5 hover:bg-brand-50">
+              <Link href="/dashboard#search-widget" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#071a36] shadow-xl shadow-black/15 transition hover:-translate-y-0.5 hover:bg-brand-50">
                 Start your search <ArrowRight size={16} />
-              </a>
+              </Link>
               <Link href="/deals" className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/10">
                 Explore deals
               </Link>
@@ -120,31 +94,6 @@ export function Hero() {
         </div>
       </div>
 
-      <motion.div
-        id="search-widget"
-        ref={searchRef}
-        initial={{ opacity: 0, y: 26 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className={cn("mx-auto max-w-7xl scroll-mt-24 px-4 transition sm:px-6 lg:px-8", highlighted && "drop-shadow-[0_0_18px_rgba(242,194,101,.65)]")}
-      >
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-2 text-xs text-white/55">
-          <span>Search flights and customize your itinerary</span>
-          <div className="hidden items-center gap-2 sm:flex">
-            <span className="text-white/35">Popular:</span>
-            {popularRoutes.map((route) => (
-              <Link
-                key={route.code}
-                href={`/search?tripType=round_trip&from=JFK&to=${route.code}&departureDate=${futureDate(14)}&returnDate=${futureDate(21)}&passengers=${encodeURIComponent(JSON.stringify({ adults: 1, children: 0, infants: 0 }))}&cabin=economy`}
-                className="rounded-full bg-white/8 px-2.5 py-1 transition hover:bg-white/15 hover:text-white"
-              >
-                {route.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-        <SearchWidget />
-      </motion.div>
     </section>
   );
 }
