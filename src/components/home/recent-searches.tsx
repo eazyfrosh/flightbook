@@ -40,6 +40,8 @@ export function RecentSearches() {
                 });
                 if (s.preferredAirlineId) params.set("airline", s.preferredAirlineId);
                 if (s.customPrice !== undefined) params.set("price", s.customPrice.toFixed(2));
+                if (s.customDepartureTime) params.set("departureTime", s.customDepartureTime);
+                if (s.customArrivalTime) params.set("arrivalTime", s.customArrivalTime);
                 router.push(`/search?${params.toString()}`);
               }}
             >
@@ -53,6 +55,12 @@ export function RecentSearches() {
               {(airline || s.customPrice !== undefined) && (
                 <p className="mt-1 text-xs text-foreground/50">
                   {airline?.name ?? "Any airline"}{s.customPrice !== undefined ? ` · ${formatCurrency(s.customPrice)}` : ""}
+                </p>
+              )}
+              {(s.customDepartureTime || s.customArrivalTime) && (
+                <p className="mt-1 text-xs text-foreground/50">
+                  {s.customDepartureTime ? `Departs ${s.customDepartureTime}` : "Generated departure"}
+                  {s.customArrivalTime ? ` · Arrives ${s.customArrivalTime}` : ""}
                 </p>
               )}
             </Card>
