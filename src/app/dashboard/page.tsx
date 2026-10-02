@@ -11,6 +11,7 @@ import { BookingCard } from "@/components/dashboard/booking-card";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SearchWidget } from "@/components/search/search-widget";
 import { startRebooking } from "@/lib/booking/rebooking";
 import type { Booking } from "@/types";
 
@@ -38,6 +39,14 @@ export default function DashboardPage() {
     }
     load();
   }, [loading, user, router, load]);
+
+  useEffect(() => {
+    if (!loading && user && window.location.hash === "#search-widget") {
+      requestAnimationFrame(() => {
+        document.getElementById("search-widget")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [loading, user]);
 
   if (loading || !user) return null;
 
@@ -82,11 +91,19 @@ export default function DashboardPage() {
           <Link href="/dashboard/profile">
             <Button variant="outline"><User size={15} /> Profile</Button>
           </Link>
-          <Link href="/#search-widget">
+          <Link href="/dashboard#search-widget">
             <Button><PlaneTakeoff size={15} /> Book a flight</Button>
           </Link>
         </div>
       </div>
+
+      <section id="search-widget" className="mb-10 scroll-mt-24 rounded-[2rem] bg-[#071a36] p-4 shadow-xl shadow-slate-950/10 sm:p-6">
+        <div className="mb-4 px-1">
+          <h2 className="text-xl font-bold text-white">Search flights</h2>
+          <p className="mt-1 text-sm text-white/65">Search flights and customize your itinerary</p>
+        </div>
+        <SearchWidget />
+      </section>
 
       <div className="mb-6 flex gap-2 border-b border-black/8 dark:border-white/10">
         {([
@@ -123,7 +140,7 @@ export default function DashboardPage() {
           }
           action={
             tab === "upcoming" ? (
-              <Link href="/#search-widget">
+              <Link href="/dashboard#search-widget">
                 <Button>
                   <PlaneTakeoff size={15} /> Search flights
                 </Button>

@@ -113,7 +113,7 @@ export function SearchResultsClient() {
 
   useEffect(() => {
     if (!hasSearchIntent) {
-      router.replace("/#search-widget");
+      router.replace("/dashboard#search-widget");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasSearchIntent]);
