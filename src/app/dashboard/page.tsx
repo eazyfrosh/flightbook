@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { PlaneTakeoff, Ticket, User } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
-import { getUserBookings, cancelBooking } from "@/lib/services/bookings";
+import { getUserBookings, cancelBooking, deleteBooking } from "@/lib/services/bookings";
 import { BookingCard } from "@/components/dashboard/booking-card";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -74,8 +74,19 @@ export default function DashboardPage() {
     load();
   }
 
-  function handleRebook(booking: Booking) {
+  function handleEdit(booking: Booking) {
     router.push(startRebooking(booking));
+  }
+
+  async function handleDelete(booking: Booking) {
+    if (!window.confirm(`Permanently delete booking ${booking.bookingReference}? This cannot be undone.`)) return;
+    try {
+      await deleteBooking(booking.id);
+      toast.success(`Booking ${booking.bookingReference} deleted`);
+      await load();
+    } catch {
+      toast.error("The booking could not be deleted. Please try again.");
+    }
   }
 
   return (
@@ -155,7 +166,8 @@ export default function DashboardPage() {
               key={booking.id}
               booking={booking}
               onCancel={tab === "upcoming" ? handleCancel : undefined}
-              onRebook={tab === "upcoming" ? handleRebook : undefined}
+              onEdit={tab === "upcoming" ? handleEdit : undefined}
+              onDelete={handleDelete}
             />
           ))}
         </div>

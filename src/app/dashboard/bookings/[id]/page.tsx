@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { CalendarClock, Mail, ShieldCheck, Ticket } from "lucide-react";
+import { Mail, Pencil, ShieldCheck, Ticket, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import { getBooking, cancelBooking } from "@/lib/services/bookings";
+import { getBooking, cancelBooking, deleteBooking } from "@/lib/services/bookings";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,9 +54,20 @@ export default function BookingDetailPage() {
     toast.success("Booking cancelled");
   }
 
-  function handleRebook() {
+  function handleEdit() {
     if (!booking) return;
     router.push(startRebooking(booking));
+  }
+
+  async function handleDelete() {
+    if (!booking || !window.confirm(`Permanently delete booking ${booking.bookingReference}? This cannot be undone.`)) return;
+    try {
+      await deleteBooking(booking.id);
+      toast.success("Booking deleted");
+      router.replace("/dashboard");
+    } catch {
+      toast.error("The booking could not be deleted. Please try again.");
+    }
   }
 
   const extraLineItems = extrasLineItems(booking.extras);
@@ -86,13 +97,16 @@ export default function BookingDetailPage() {
             <Button variant="outline"><Mail size={15} /> Preview email</Button>
           </Link>
           {manageable && (
-            <Button variant="outline" onClick={handleRebook}>
-              <CalendarClock size={15} /> Rebook flight
+            <Button variant="outline" onClick={handleEdit}>
+              <Pencil size={15} /> Edit booking
             </Button>
           )}
           {manageable && (
             <Button variant="danger" onClick={handleCancel}>Cancel booking</Button>
           )}
+          <Button variant="danger" onClick={() => void handleDelete()}>
+            <Trash2 size={15} /> Delete booking
+          </Button>
         </div>
       </div>
 
