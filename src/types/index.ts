@@ -125,6 +125,11 @@ export interface Booking {
   boardingTime?: string;
 }
 
+export type BookingStatusSummary = Pick<
+  Booking,
+  "bookingReference" | "status" | "flights" | "gate" | "terminal" | "boardingTime"
+>;
+
 export type UserRole = "user" | "admin";
 
 export interface UserProfile {
