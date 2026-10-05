@@ -5,6 +5,7 @@ import { PopularDestinations } from "@/components/home/popular-destinations";
 import { WorldRoutesMap } from "@/components/home/world-routes-map";
 import { AirlinesSection } from "@/components/home/airlines-section";
 import { PromoBanners } from "@/components/home/promo-banners";
+import { SubscriptionSection } from "@/components/subscriptions/subscription-section";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <PopularDestinations />
       <HowItWorks />
       <PromoBanners />
+      <SubscriptionSection />
       <WorldRoutesMap />
       <AirlinesSection />
     </div>

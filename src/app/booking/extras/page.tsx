@@ -18,11 +18,12 @@ import { MEAL_OPTIONS } from "@/lib/data/flights";
 import { EXTRA_BAGGAGE_PRICE, INSURANCE_PRICE, PRIORITY_PRICE, computeExtrasTotal } from "@/lib/data/extras-pricing";
 import { formatCurrency, generateBookingReference, generateVerificationToken } from "@/lib/utils";
 import type { Booking } from "@/types";
+import { SubscriptionGate } from "@/components/subscriptions/subscription-gate";
 
 export default function ExtrasPage() {
   const hydrated = useBookingHydrated();
   if (!hydrated) return null;
-  return <ExtrasForm />;
+  return <SubscriptionGate nextPath="/booking/extras"><ExtrasForm /></SubscriptionGate>;
 }
 
 function ExtrasForm() {

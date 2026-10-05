@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PlaneTakeoff, Ticket, User } from "lucide-react";
+import { CreditCard, PlaneTakeoff, Ticket, User } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import { getUserBookings, cancelBooking, deleteBooking } from "@/lib/services/bookings";
@@ -99,6 +99,9 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href="/dashboard/subscription">
+            <Button variant="outline"><CreditCard size={15} /> Subscription</Button>
+          </Link>
           <Link href="/dashboard/profile">
             <Button variant="outline"><User size={15} /> Profile</Button>
           </Link>

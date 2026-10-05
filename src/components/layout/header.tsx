@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/flight-status", label: "Flight Status" },
   { href: "/manage-booking", label: "Manage Booking" },
   { href: "/deals", label: "Deals" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export function Header() {
@@ -65,6 +66,9 @@ export function Header() {
                 </Link>
                 <Link href="/dashboard/profile" className="block rounded-lg px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10">
                   Profile
+                </Link>
+                <Link href="/dashboard/subscription" className="block rounded-lg px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10">
+                  Subscription
                 </Link>
                 {profile?.role === "admin" && (
                   <Link href="/admin" className="block rounded-lg px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10">
@@ -123,6 +127,9 @@ export function Header() {
               <>
                 <Link href="/dashboard" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
                   My Trips
+                </Link>
+                <Link href="/dashboard/subscription" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
+                  Subscription
                 </Link>
                 {profile?.role === "admin" && (
                   <Link href="/admin" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
