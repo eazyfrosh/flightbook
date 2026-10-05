@@ -1,4 +1,4 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { adminAuth, adminDb, isAdminFirebaseConfigured } from "@/lib/firebase/admin";
 import type { UserRole } from "@/types";
 
@@ -15,11 +15,13 @@ export interface AuthenticatedSubscriber {
 }
 
 async function verifyFirebaseToken(token: string) {
+  const failures: string[] = [];
   if (isAdminFirebaseConfigured && adminAuth) {
     try {
       const decoded = await adminAuth.verifyIdToken(token);
       return { uid: decoded.uid, email: decoded.email ?? "" };
-    } catch {
+    } catch (error) {
+      failures.push(`admin:${error instanceof Error ? error.message : "unknown"}`);
       // Continue with Firebase's Identity Toolkit endpoint. This keeps user
       // sessions valid while service-account credentials are being rotated.
     }
@@ -36,22 +38,49 @@ async function verifyFirebaseToken(token: string) {
           email: typeof payload.email === "string" ? payload.email : "",
         };
       }
-    } catch {
+    } catch (error) {
+      failures.push(`jwks:${error instanceof Error ? error.message : "unknown"}`);
       // Fall through to Firebase Identity Toolkit for a final verification.
     }
   }
-  if (!firebaseApiKey) return null;
+  if (!firebaseApiKey) {
+    failures.push("identity-toolkit:missing-api-key");
+    logRejectedToken(token, failures);
+    return null;
+  }
   const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(firebaseApiKey)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idToken: token }),
     cache: "no-store",
   });
-  if (!response.ok) return null;
+  if (!response.ok) {
+    const message = await response.text().catch(() => "");
+    failures.push(`identity-toolkit:${response.status}:${message.slice(0, 180)}`);
+    logRejectedToken(token, failures);
+    return null;
+  }
   const payload = await response.json().catch(() => null);
   const user = payload?.users?.[0];
-  if (!user?.localId) return null;
+  if (!user?.localId) {
+    failures.push("identity-toolkit:missing-user");
+    logRejectedToken(token, failures);
+    return null;
+  }
   return { uid: user.localId as string, email: typeof user.email === "string" ? user.email : "" };
+}
+
+function logRejectedToken(token: string, failures: string[]) {
+  let claims: { aud?: string | string[]; iss?: string; exp?: number } = {};
+  try { claims = decodeJwt(token); } catch { failures.push("decode:invalid-jwt"); }
+  console.warn("[subscription-auth] Firebase token rejected", {
+    configuredProjectId: projectId ?? null,
+    tokenAudience: claims.aud ?? null,
+    tokenIssuer: claims.iss ?? null,
+    tokenExpiresAt: claims.exp ?? null,
+    adminConfigured: isAdminFirebaseConfigured,
+    failures,
+  });
 }
 
 async function resolveRole(uid: string): Promise<UserRole> {
