@@ -84,7 +84,7 @@ export default function BookingDetailPage() {
           </Badge>
         </div>
         <div className="flex flex-wrap gap-2">
-          <DownloadPdfButton label="Download PDF itinerary" />
+          <DownloadPdfButton label="Download PDF itinerary" booking={booking} />
           {booking.status !== "cancelled" && (
             <Link href={`/boarding-pass/${booking.id}`}>
               <Button variant="secondary"><Ticket size={15} /> Boarding pass</Button>
