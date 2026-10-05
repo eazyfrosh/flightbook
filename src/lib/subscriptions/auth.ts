@@ -12,8 +12,13 @@ export interface AuthenticatedSubscriber {
 
 async function verifyFirebaseToken(token: string) {
   if (isAdminFirebaseConfigured && adminAuth) {
-    const decoded = await adminAuth.verifyIdToken(token);
-    return { uid: decoded.uid, email: decoded.email ?? "" };
+    try {
+      const decoded = await adminAuth.verifyIdToken(token);
+      return { uid: decoded.uid, email: decoded.email ?? "" };
+    } catch {
+      // Continue with Firebase's Identity Toolkit endpoint. This keeps user
+      // sessions valid while service-account credentials are being rotated.
+    }
   }
   if (!firebaseApiKey) return null;
   const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(firebaseApiKey)}`, {
