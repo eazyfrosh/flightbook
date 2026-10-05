@@ -64,17 +64,16 @@ server-only variables in Vercel before accepting payments:
 NEXT_PUBLIC_APP_URL=https://www.skybookinc.app
 PAYSTACK_SECRET_KEY=sk_live_...
 PAYSTACK_SKYBOOK_MONTHLY_PLAN_CODE=PLN_... # the Skybook ₦20,000 monthly plan
-FIREBASE_ADMIN_PROJECT_ID=... # optional when NEXT_PUBLIC_FIREBASE_PROJECT_ID is already set
-FIREBASE_ADMIN_CLIENT_EMAIL=...
-FIREBASE_ADMIN_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_... # added automatically when the private Blob store is connected
 ```
 
 Create the Paystack plan as a recurring monthly **NGN ₦20,000** plan, then place
 its plan code in `PAYSTACK_SKYBOOK_MONTHLY_PLAN_CODE`. Configure the Paystack
 webhook URL as `https://www.skybookinc.app/api/paystack/webhook`. The webhook
 signature and every successful charge are verified server-side before access
-is granted. Firebase Admin is required so payment intents and subscription
-records remain durable across serverless requests.
+is granted. Connect a private Vercel Blob store to the FlightBook project so
+payment intents, subscriptions, payments, and webhook events remain durable
+across serverless requests.
 
 Once all of these are present, the app automatically switches to real Firebase
 Auth + Firestore (see `src/lib/firebase/client.ts`). Data reads/writes go through

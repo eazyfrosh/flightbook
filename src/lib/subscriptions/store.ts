@@ -1,12 +1,17 @@
-import { adminDb, isAdminFirebaseConfigured } from "@/lib/firebase/admin";
+import { get, list, put } from "@vercel/blob";
 import type { Subscription, SubscriptionPayment, SubscriptionPaymentIntent } from "@/types/subscription";
 
-const SUBSCRIPTIONS = "skybookSubscriptions";
-const PAYMENTS = "skybookSubscriptionPayments";
-const INTENTS = "skybookSubscriptionIntents";
-const EVENTS = "skybookPaystackEvents";
+const ROOT = "skybook-subscriptions";
+const SUBSCRIPTIONS = `${ROOT}/subscriptions`;
+const PAYMENTS = `${ROOT}/payments`;
+const INTENTS = `${ROOT}/intents`;
+const EVENTS = `${ROOT}/paystack-events`;
 
-export const isSubscriptionBackendDurable = isAdminFirebaseConfigured;
+// A connected Vercel Blob store exposes BLOB_READ_WRITE_TOKEN. Newer Vercel
+// runtimes can also authenticate with OIDC when BLOB_STORE_ID is present.
+export const isSubscriptionBackendDurable = Boolean(
+  process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID,
+);
 
 declare global {
   var __skybookSubscriptions:
@@ -22,34 +27,61 @@ declare global {
 function memoryStore() {
   if (!global.__skybookSubscriptions) {
     global.__skybookSubscriptions = {
-      subscriptions: new Map(),
-      payments: new Map(),
-      intents: new Map(),
-      events: new Set(),
+      subscriptions: new Map(), payments: new Map(), intents: new Map(), events: new Set(),
     };
   }
   return global.__skybookSubscriptions;
 }
 
+function key(value: string) { return encodeURIComponent(value); }
+function subscriptionPath(userId: string) { return `${SUBSCRIPTIONS}/${key(userId)}.json`; }
+function paymentPath(id: string) { return `${PAYMENTS}/${key(id)}.json`; }
+function intentPath(reference: string) { return `${INTENTS}/${key(reference)}.json`; }
+function eventPath(id: string) { return `${EVENTS}/${key(id)}.json`; }
+
+async function readJson<T>(pathname: string): Promise<T | null> {
+  const result = await get(pathname, { access: "private", useCache: false });
+  if (!result || result.statusCode !== 200 || !result.stream) return null;
+  return new Response(result.stream).json() as Promise<T>;
+}
+
+async function writeJson(pathname: string, value: unknown, allowOverwrite = true) {
+  return put(pathname, JSON.stringify(value), {
+    access: "private", addRandomSuffix: false, allowOverwrite,
+    cacheControlMaxAge: 60, contentType: "application/json",
+  });
+}
+
+async function readAll<T>(prefix: string): Promise<T[]> {
+  const values: T[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await list({ prefix: `${prefix}/`, cursor, limit: 1000 });
+    const records = await Promise.all(page.blobs.map((blob) => readJson<T>(blob.pathname)));
+    for (const record of records) {
+      if (record !== null) values.push(record as T);
+    }
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+  return values;
+}
+
 export async function getSubscription(userId: string): Promise<Subscription | null> {
-  if (adminDb) {
-    const snapshot = await adminDb.collection(SUBSCRIPTIONS).doc(userId).get();
-    return snapshot.exists ? snapshot.data() as Subscription : null;
-  }
+  if (isSubscriptionBackendDurable) return readJson<Subscription>(subscriptionPath(userId));
   return memoryStore().subscriptions.get(userId) ?? null;
 }
 
 export async function saveSubscription(subscription: Subscription) {
-  if (adminDb) {
-    await adminDb.collection(SUBSCRIPTIONS).doc(subscription.userId).set(subscription, { merge: true });
+  if (isSubscriptionBackendDurable) {
+    await writeJson(subscriptionPath(subscription.userId), subscription);
     return;
   }
   memoryStore().subscriptions.set(subscription.userId, subscription);
 }
 
 export async function saveIntent(intent: SubscriptionPaymentIntent) {
-  if (adminDb) {
-    await adminDb.collection(INTENTS).doc(intent.reference).create(intent);
+  if (isSubscriptionBackendDurable) {
+    await writeJson(intentPath(intent.reference), intent, false);
     return;
   }
   if (memoryStore().intents.has(intent.reference)) throw new Error("Payment reference already exists.");
@@ -57,10 +89,7 @@ export async function saveIntent(intent: SubscriptionPaymentIntent) {
 }
 
 export async function getIntent(reference: string): Promise<SubscriptionPaymentIntent | null> {
-  if (adminDb) {
-    const snapshot = await adminDb.collection(INTENTS).doc(reference).get();
-    return snapshot.exists ? snapshot.data() as SubscriptionPaymentIntent : null;
-  }
+  if (isSubscriptionBackendDurable) return readJson<SubscriptionPaymentIntent>(intentPath(reference));
   return memoryStore().intents.get(reference) ?? null;
 }
 
@@ -68,60 +97,50 @@ export async function markIntentFailed(reference: string) {
   const intent = await getIntent(reference);
   if (!intent || intent.status !== "pending") return;
   const updated = { ...intent, status: "failed" as const, updatedAt: new Date().toISOString() };
-  if (adminDb) await adminDb.collection(INTENTS).doc(reference).set(updated, { merge: true });
+  if (isSubscriptionBackendDurable) await writeJson(intentPath(reference), updated);
   else memoryStore().intents.set(reference, updated);
 }
 
 export async function commitPayment(input: {
-  intent: SubscriptionPaymentIntent;
-  subscription: Subscription;
-  payment: SubscriptionPayment;
+  intent: SubscriptionPaymentIntent; subscription: Subscription; payment: SubscriptionPayment;
 }) {
-  if (adminDb) {
-    const intentRef = adminDb.collection(INTENTS).doc(input.intent.reference);
-    const subscriptionRef = adminDb.collection(SUBSCRIPTIONS).doc(input.subscription.userId);
-    const paymentRef = adminDb.collection(PAYMENTS).doc(input.payment.id);
-    return adminDb.runTransaction(async (transaction) => {
-      const [intentSnapshot, paymentSnapshot] = await Promise.all([
-        transaction.get(intentRef),
-        transaction.get(paymentRef),
-      ]);
-      if (!intentSnapshot.exists) throw new Error("Subscription payment request not found.");
-      if (paymentSnapshot.exists || intentSnapshot.data()?.status === "paid") return false;
-      if (intentSnapshot.data()?.status !== "pending") throw new Error("This payment is no longer pending.");
-      transaction.set(subscriptionRef, input.subscription, { merge: true });
-      transaction.create(paymentRef, input.payment);
-      transaction.update(intentRef, {
-        status: "paid",
-        providerTransactionId: input.payment.providerTransactionId,
-        updatedAt: input.payment.updatedAt,
-      });
-      return true;
-    });
+  if (isSubscriptionBackendDurable) {
+    const [currentIntent, existingPayment] = await Promise.all([
+      getIntent(input.intent.reference), readJson<SubscriptionPayment>(paymentPath(input.payment.id)),
+    ]);
+    if (!currentIntent) throw new Error("Subscription payment request not found.");
+    if (existingPayment || currentIntent.status === "paid") return false;
+    if (currentIntent.status !== "pending") throw new Error("This payment is no longer pending.");
+    const paidIntent: SubscriptionPaymentIntent = {
+      ...currentIntent, status: "paid", providerTransactionId: input.payment.providerTransactionId,
+      updatedAt: input.payment.updatedAt,
+    };
+    await Promise.all([
+      writeJson(subscriptionPath(input.subscription.userId), input.subscription),
+      writeJson(paymentPath(input.payment.id), input.payment, false),
+      writeJson(intentPath(input.intent.reference), paidIntent),
+    ]);
+    return true;
   }
   const store = memoryStore();
   if (store.payments.has(input.payment.id) || store.intents.get(input.intent.reference)?.status === "paid") return false;
   store.subscriptions.set(input.subscription.userId, input.subscription);
   store.payments.set(input.payment.id, input.payment);
   store.intents.set(input.intent.reference, {
-    ...input.intent,
-    status: "paid",
-    providerTransactionId: input.payment.providerTransactionId,
+    ...input.intent, status: "paid", providerTransactionId: input.payment.providerTransactionId,
     updatedAt: input.payment.updatedAt,
   });
   return true;
 }
 
 export async function recordRenewal(subscription: Subscription, payment: SubscriptionPayment) {
-  if (adminDb) {
-    const paymentRef = adminDb.collection(PAYMENTS).doc(payment.id);
-    const subscriptionRef = adminDb.collection(SUBSCRIPTIONS).doc(subscription.userId);
-    return adminDb.runTransaction(async (transaction) => {
-      if ((await transaction.get(paymentRef)).exists) return false;
-      transaction.set(subscriptionRef, subscription, { merge: true });
-      transaction.create(paymentRef, payment);
-      return true;
-    });
+  if (isSubscriptionBackendDurable) {
+    if (await readJson<SubscriptionPayment>(paymentPath(payment.id))) return false;
+    await Promise.all([
+      writeJson(subscriptionPath(subscription.userId), subscription),
+      writeJson(paymentPath(payment.id), payment, false),
+    ]);
+    return true;
   }
   const store = memoryStore();
   if (store.payments.has(payment.id)) return false;
@@ -131,46 +150,37 @@ export async function recordRenewal(subscription: Subscription, payment: Subscri
 }
 
 export async function listPayments(userId: string): Promise<SubscriptionPayment[]> {
-  if (adminDb) {
-    const snapshot = await adminDb.collection(PAYMENTS).where("userId", "==", userId).get();
-    return snapshot.docs.map((document) => document.data() as SubscriptionPayment)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }
-  return [...memoryStore().payments.values()]
-    .filter((payment) => payment.userId === userId)
+  const payments = isSubscriptionBackendDurable
+    ? await readAll<SubscriptionPayment>(PAYMENTS) : [...memoryStore().payments.values()];
+  return payments.filter((payment) => payment.userId === userId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function markPaymentRefunded(reference: string) {
-  if (adminDb) {
-    const matches = await adminDb.collection(PAYMENTS).where("reference", "==", reference).limit(1).get();
-    if (matches.empty) return false;
-    const payment = matches.docs[0].data() as SubscriptionPayment;
-    const paymentRef = matches.docs[0].ref;
-    const subscriptionRef = adminDb.collection(SUBSCRIPTIONS).doc(payment.userId);
-    await adminDb.runTransaction(async (transaction) => {
-      const paymentSnapshot = await transaction.get(paymentRef);
-      if (!paymentSnapshot.exists || paymentSnapshot.data()?.status === "refunded") return;
-      const now = new Date().toISOString();
-      transaction.update(paymentRef, { status: "refunded", updatedAt: now });
-      transaction.set(subscriptionRef, { status: "cancelled", nextBillingAt: null, updatedAt: now }, { merge: true });
-    });
-    return true;
-  }
-  const store = memoryStore();
-  const payment = [...store.payments.values()].find((item) => item.reference === reference);
+  const payments = isSubscriptionBackendDurable
+    ? await readAll<SubscriptionPayment>(PAYMENTS) : [...memoryStore().payments.values()];
+  const payment = payments.find((item) => item.reference === reference);
   if (!payment) return false;
   const now = new Date().toISOString();
-  store.payments.set(payment.id, { ...payment, status: "refunded", updatedAt: now });
-  const subscription = store.subscriptions.get(payment.userId);
-  if (subscription) store.subscriptions.set(payment.userId, { ...subscription, status: "cancelled", nextBillingAt: null, updatedAt: now });
+  const refunded = { ...payment, status: "refunded" as const, updatedAt: now };
+  const subscription = await getSubscription(payment.userId);
+  const cancelled = subscription
+    ? { ...subscription, status: "cancelled" as const, nextBillingAt: null, updatedAt: now } : null;
+  if (isSubscriptionBackendDurable) {
+    await Promise.all([
+      writeJson(paymentPath(payment.id), refunded),
+      cancelled ? writeJson(subscriptionPath(cancelled.userId), cancelled) : Promise.resolve(),
+    ]);
+  } else {
+    memoryStore().payments.set(payment.id, refunded);
+    if (cancelled) memoryStore().subscriptions.set(cancelled.userId, cancelled);
+  }
   return true;
 }
 
 export async function findSubscriptionByProvider(input: { email?: string; customerCode?: string; subscriptionCode?: string }) {
-  const subscriptions = adminDb
-    ? (await adminDb.collection(SUBSCRIPTIONS).get()).docs.map((document) => document.data() as Subscription)
-    : [...memoryStore().subscriptions.values()];
+  const subscriptions = isSubscriptionBackendDurable
+    ? await readAll<Subscription>(SUBSCRIPTIONS) : [...memoryStore().subscriptions.values()];
   return subscriptions.find((subscription) =>
     Boolean(input.subscriptionCode && subscription.paystackSubscriptionCode === input.subscriptionCode) ||
     Boolean(input.customerCode && subscription.paystackCustomerCode === input.customerCode) ||
@@ -179,13 +189,13 @@ export async function findSubscriptionByProvider(input: { email?: string; custom
 }
 
 export async function hasEvent(id: string) {
-  if (adminDb) return (await adminDb.collection(EVENTS).doc(id).get()).exists;
+  if (isSubscriptionBackendDurable) return Boolean(await readJson(eventPath(id)));
   return memoryStore().events.has(id);
 }
 
 export async function recordEvent(id: string, name: string, reference: string | null) {
-  if (adminDb) {
-    await adminDb.collection(EVENTS).doc(id).set({ id, name, reference, processedAt: new Date().toISOString() });
+  if (isSubscriptionBackendDurable) {
+    await writeJson(eventPath(id), { id, name, reference, processedAt: new Date().toISOString() });
     return;
   }
   memoryStore().events.add(id);

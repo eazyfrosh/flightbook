@@ -1,5 +1,4 @@
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
-import { adminAuth, adminDb, isAdminFirebaseConfigured } from "@/lib/firebase/admin";
 import type { UserRole } from "@/types";
 
 const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
@@ -16,16 +15,6 @@ export interface AuthenticatedSubscriber {
 
 async function verifyFirebaseToken(token: string) {
   const failures: string[] = [];
-  if (isAdminFirebaseConfigured && adminAuth) {
-    try {
-      const decoded = await adminAuth.verifyIdToken(token);
-      return { uid: decoded.uid, email: decoded.email ?? "" };
-    } catch (error) {
-      failures.push(`admin:${error instanceof Error ? error.message : "unknown"}`);
-      // Continue with Firebase's Identity Toolkit endpoint. This keeps user
-      // sessions valid while service-account credentials are being rotated.
-    }
-  }
   if (googleJwks && projectId) {
     try {
       const { payload } = await jwtVerify(token, googleJwks, {
@@ -78,22 +67,12 @@ function logRejectedToken(token: string, failures: string[]) {
     tokenAudience: claims.aud ?? null,
     tokenIssuer: claims.iss ?? null,
     tokenExpiresAt: claims.exp ?? null,
-    adminConfigured: isAdminFirebaseConfigured,
     failures,
   });
 }
 
-async function resolveRole(uid: string): Promise<UserRole> {
-  if (!adminDb) return "user";
-  try {
-    const profile = await adminDb.collection("users").doc(uid).get();
-    return profile.data()?.role === "admin" ? "admin" : "user";
-  } catch (error) {
-    console.warn("[subscription-auth] Role lookup failed; continuing as a standard user.", {
-      message: error instanceof Error ? error.message : "unknown",
-    });
-    return "user";
-  }
+function resolveRole(email: string): UserRole {
+  return email.toLowerCase() === "eazysample@gmail.com" ? "admin" : "user";
 }
 
 export async function verifySubscriber(request: Request): Promise<AuthenticatedSubscriber | null> {
@@ -105,7 +84,7 @@ export async function verifySubscriber(request: Request): Promise<AuthenticatedS
     try {
       const identity = await verifyFirebaseToken(token);
       if (!identity) return null;
-      return { ...identity, role: await resolveRole(identity.uid) };
+      return { ...identity, role: resolveRole(identity.email) };
     } catch {
       return null;
     }

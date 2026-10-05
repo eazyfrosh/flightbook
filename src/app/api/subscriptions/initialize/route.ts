@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const caller = await verifySubscriber(request);
   if (!caller) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   if (!isSubscriptionBackendDurable) {
-    return NextResponse.json({ error: "Subscription storage is not configured. Add the Firebase Admin environment variables in Vercel." }, { status: 503 });
+    return NextResponse.json({ error: "Subscription storage is not configured. Connect a private Vercel Blob store to this project." }, { status: 503 });
   }
   const secret = process.env.PAYSTACK_SECRET_KEY;
   if (!secret) return NextResponse.json({ error: "Paystack is not configured." }, { status: 503 });
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[subscriptions] Unable to save payment intent", error);
-    return NextResponse.json({ error: "Subscription storage could not be reached. Check the Firebase Admin credentials." }, { status: 503 });
+    return NextResponse.json({ error: "Subscription storage could not be reached. Check the Vercel Blob connection." }, { status: 503 });
   }
 
   try {

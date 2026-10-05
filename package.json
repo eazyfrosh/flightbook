@@ -10,10 +10,10 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@vercel/blob": "^2.8.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "firebase": "^12.16.0",
-    "firebase-admin": "^13.5.0",
     "framer-motion": "^12.42.2",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
