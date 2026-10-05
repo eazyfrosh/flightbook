@@ -18,10 +18,6 @@ function addMonth(date: Date) {
   return next;
 }
 
-function providerPlanCode(value: string | { plan_code?: string } | undefined) {
-  return typeof value === "string" ? value : value?.plan_code;
-}
-
 function makePayment(subscription: Subscription, reference: string, transactionId: string, paidAt: string): SubscriptionPayment {
   const now = new Date().toISOString();
   return {
@@ -52,15 +48,13 @@ export async function activateSubscription(userId: string, reference: string) {
   if (intent.status !== "pending") throw new Error("This subscription payment is no longer pending.");
 
   const verified = await verifyPaystackTransaction(reference, secret);
-  const verifiedPlan = providerPlanCode(verified.plan);
   if (
     verified.status !== "success" ||
     verified.reference !== intent.reference ||
     verified.amount !== intent.amountCents ||
     verified.currency !== intent.currency ||
     verified.metadata?.purpose !== "skybook_subscription" ||
-    verified.metadata?.userId !== intent.userId ||
-    (verifiedPlan && SKYBOOK_PLAN.paystackPlanCode && verifiedPlan !== SKYBOOK_PLAN.paystackPlanCode)
+    verified.metadata?.userId !== intent.userId
   ) {
     throw new Error("Verified Paystack details do not match this SkyBook subscription.");
   }
@@ -106,10 +100,6 @@ export async function processRenewal(reference: string) {
     subscriptionCode: verified.subscription_code,
   });
   if (!subscription) return false;
-  const verifiedPlan = providerPlanCode(verified.plan);
-  if (verifiedPlan && SKYBOOK_PLAN.paystackPlanCode && verifiedPlan !== SKYBOOK_PLAN.paystackPlanCode) {
-    throw new Error("Paystack renewal plan does not match SkyBook Unlimited.");
-  }
   const paidAt = new Date(verified.paid_at ?? Date.now());
   const expiresAt = addMonth(paidAt).toISOString();
   const updated: Subscription = {
