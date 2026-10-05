@@ -7,6 +7,8 @@ export interface SubscriptionPlan {
   description: string;
   priceCents: number;
   currency: "USD";
+  paystackAmountSubunit: number;
+  paystackCurrency: "NGN";
   interval: "monthly";
   paystackPlanCode: string | null;
   features: string[];
@@ -33,7 +35,7 @@ export interface SubscriptionPayment {
   subscriptionId: string;
   userId: string;
   amountCents: number;
-  currency: "USD";
+  currency: "USD" | "NGN";
   reference: string;
   providerTransactionId: string;
   status: SubscriptionPaymentStatus;
@@ -47,7 +49,7 @@ export interface SubscriptionPaymentIntent {
   userId: string;
   email: string;
   amountCents: number;
-  currency: "USD";
+  currency: "USD" | "NGN";
   reference: string;
   status: SubscriptionPaymentStatus;
   providerTransactionId: string | null;

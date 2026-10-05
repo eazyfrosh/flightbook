@@ -83,7 +83,7 @@ export function PricingClient() {
                 <Button className="w-full bg-white text-[#071a36] shadow-white/10 hover:bg-brand-50" size="lg">Sign in to subscribe</Button>
               </Link>
             )}
-            <p className="mt-4 text-center text-xs text-white/45">Renews monthly until cancelled. Payment is processed securely by Paystack.</p>
+            <p className="mt-4 text-center text-xs text-white/45">Renews monthly until cancelled. Nigerian checkout is billed at ₦20,000 through Paystack.</p>
           </article>
         ) : null}
       </div>
