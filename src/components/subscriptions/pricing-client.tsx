@@ -34,8 +34,12 @@ export function PricingClient() {
         headers: { "Content-Type": "application/json", ...headers },
         body: JSON.stringify({ next: searchParams.get("next") ?? "/dashboard" }),
       });
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") ?? "";
+      const data = contentType.includes("application/json")
+        ? await response.json()
+        : null;
       if (!response.ok) throw new Error(data?.error ?? "Could not start Paystack checkout.");
+      if (!data?.authorizationUrl) throw new Error("Paystack checkout did not return a payment link.");
       window.location.href = data.authorizationUrl;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not start Paystack checkout.");
