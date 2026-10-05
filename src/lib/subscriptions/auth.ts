@@ -1,11 +1,8 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
 import { adminAuth, adminDb, isAdminFirebaseConfigured } from "@/lib/firebase/admin";
 import type { UserRole } from "@/types";
 
 const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const googleJwks = projectId
-  ? createRemoteJWKSet(new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"))
-  : null;
+const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
 export interface AuthenticatedSubscriber {
   uid: string;
@@ -18,13 +15,18 @@ async function verifyFirebaseToken(token: string) {
     const decoded = await adminAuth.verifyIdToken(token);
     return { uid: decoded.uid, email: decoded.email ?? "" };
   }
-  if (!googleJwks || !projectId) return null;
-  const { payload } = await jwtVerify(token, googleJwks, {
-    issuer: `https://securetoken.google.com/${projectId}`,
-    audience: projectId,
+  if (!firebaseApiKey) return null;
+  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(firebaseApiKey)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken: token }),
+    cache: "no-store",
   });
-  if (!payload.sub) return null;
-  return { uid: payload.sub, email: typeof payload.email === "string" ? payload.email : "" };
+  if (!response.ok) return null;
+  const payload = await response.json().catch(() => null);
+  const user = payload?.users?.[0];
+  if (!user?.localId) return null;
+  return { uid: user.localId as string, email: typeof user.email === "string" ? user.email : "" };
 }
 
 async function resolveRole(uid: string): Promise<UserRole> {
