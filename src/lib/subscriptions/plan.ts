@@ -6,6 +6,8 @@ export const SKYBOOK_PLAN: SubscriptionPlan = {
   description: "Unlimited access to SkyBook flight planning, booking tools, itineraries, and future member features.",
   priceCents: 1500,
   currency: "USD",
+  paystackAmountSubunit: 2_000_000,
+  paystackCurrency: "NGN",
   interval: "monthly",
   paystackPlanCode: process.env.PAYSTACK_SKYBOOK_MONTHLY_PLAN_CODE ?? null,
   features: [

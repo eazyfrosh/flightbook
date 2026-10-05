@@ -63,13 +63,13 @@ server-only variables in Vercel before accepting payments:
 ```
 NEXT_PUBLIC_APP_URL=https://www.skybookinc.app
 PAYSTACK_SECRET_KEY=sk_live_...
-PAYSTACK_SKYBOOK_MONTHLY_PLAN_CODE=PLN_...
+PAYSTACK_SKYBOOK_MONTHLY_PLAN_CODE=PLN_... # the Skybook ₦20,000 monthly plan
 FIREBASE_ADMIN_PROJECT_ID=...
 FIREBASE_ADMIN_CLIENT_EMAIL=...
 FIREBASE_ADMIN_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
 ```
 
-Create the Paystack plan as a recurring monthly **USD 15.00** plan, then place
+Create the Paystack plan as a recurring monthly **NGN ₦20,000** plan, then place
 its plan code in `PAYSTACK_SKYBOOK_MONTHLY_PLAN_CODE`. Configure the Paystack
 webhook URL as `https://www.skybookinc.app/api/paystack/webhook`. The webhook
 signature and every successful charge are verified server-side before access
@@ -135,7 +135,7 @@ payment method is ever collected. The Booking Confirmation page shows:
 
 - **Homepage** — premium hero, subscription section, popular destinations,
   recent searches, promotions, route map, and featured airlines.
-- **SkyBook Unlimited** — USD $15 monthly recurring Paystack subscription,
+- **SkyBook Unlimited** — displayed as USD $15 monthly and billed as NGN ₦20,000 through Paystack,
   secure callback and webhook verification, billing history, and cancellation.
 - **Search results** — mock flight generator, filters (stops, airline, price,
   departure/arrival window, refundable), sorting, per-leg selection for

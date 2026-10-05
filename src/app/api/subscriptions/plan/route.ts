@@ -9,6 +9,8 @@ export async function GET() {
       description: SKYBOOK_PLAN.description,
       priceCents: SKYBOOK_PLAN.priceCents,
       currency: SKYBOOK_PLAN.currency,
+      paystackAmountSubunit: SKYBOOK_PLAN.paystackAmountSubunit,
+      paystackCurrency: SKYBOOK_PLAN.paystackCurrency,
       interval: SKYBOOK_PLAN.interval,
       features: SKYBOOK_PLAN.features,
     },

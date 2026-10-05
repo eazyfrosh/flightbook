@@ -28,8 +28,8 @@ function makePayment(subscription: Subscription, reference: string, transactionI
     id: `paystack_${transactionId}`,
     subscriptionId: subscription.id,
     userId: subscription.userId,
-    amountCents: SKYBOOK_PLAN.priceCents,
-    currency: "USD",
+    amountCents: SKYBOOK_PLAN.paystackAmountSubunit,
+    currency: SKYBOOK_PLAN.paystackCurrency,
     reference,
     providerTransactionId: transactionId,
     status: "paid",
@@ -92,7 +92,12 @@ export async function activateSubscription(userId: string, reference: string) {
 export async function processRenewal(reference: string) {
   if (!secret) throw new Error("Paystack is not configured.");
   const verified = await verifyPaystackTransaction(reference, secret);
-  if (verified.status !== "success" || verified.reference !== reference || verified.amount !== SKYBOOK_PLAN.priceCents || verified.currency !== "USD") {
+  if (
+    verified.status !== "success" ||
+    verified.reference !== reference ||
+    verified.amount !== SKYBOOK_PLAN.paystackAmountSubunit ||
+    verified.currency !== SKYBOOK_PLAN.paystackCurrency
+  ) {
     throw new Error("Paystack renewal verification failed.");
   }
   const subscription = await findSubscriptionByProvider({
