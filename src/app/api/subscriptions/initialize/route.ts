@@ -20,18 +20,23 @@ export async function POST(request: Request) {
 
   const reference = `SKY-SUB-${Date.now()}-${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
   const now = new Date().toISOString();
-  await saveIntent({
-    id: reference,
-    userId: caller.uid,
-    email: caller.email,
-    amountCents: SKYBOOK_PLAN.paystackAmountSubunit,
-    currency: SKYBOOK_PLAN.paystackCurrency,
-    reference,
-    status: "pending",
-    providerTransactionId: null,
-    createdAt: now,
-    updatedAt: now,
-  });
+  try {
+    await saveIntent({
+      id: reference,
+      userId: caller.uid,
+      email: caller.email,
+      amountCents: SKYBOOK_PLAN.paystackAmountSubunit,
+      currency: SKYBOOK_PLAN.paystackCurrency,
+      reference,
+      status: "pending",
+      providerTransactionId: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error("[subscriptions] Unable to save payment intent", error);
+    return NextResponse.json({ error: "Subscription storage could not be reached. Check the Firebase Admin credentials." }, { status: 503 });
+  }
 
   try {
     const body = await request.json().catch(() => null);

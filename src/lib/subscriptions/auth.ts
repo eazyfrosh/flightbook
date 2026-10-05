@@ -85,8 +85,15 @@ function logRejectedToken(token: string, failures: string[]) {
 
 async function resolveRole(uid: string): Promise<UserRole> {
   if (!adminDb) return "user";
-  const profile = await adminDb.collection("users").doc(uid).get();
-  return profile.data()?.role === "admin" ? "admin" : "user";
+  try {
+    const profile = await adminDb.collection("users").doc(uid).get();
+    return profile.data()?.role === "admin" ? "admin" : "user";
+  } catch (error) {
+    console.warn("[subscription-auth] Role lookup failed; continuing as a standard user.", {
+      message: error instanceof Error ? error.message : "unknown",
+    });
+    return "user";
+  }
 }
 
 export async function verifySubscriber(request: Request): Promise<AuthenticatedSubscriber | null> {
