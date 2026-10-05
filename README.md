@@ -1,10 +1,10 @@
 # SkyBook — Premium Flight Booking
 
 SkyBook is a flight-booking platform built to look and feel like a production
-travel site (Expedia/Google Flights-style). **It is not connected to any real
-airline or GDS, and it has no payment system of any kind.** Booking a flight
-is completely free — all flights, prices, and availability are simulated with
-deterministic mock data.
+travel site (Expedia/Google Flights-style). It is not connected to a real
+airline or GDS; flights, prices, and availability are simulated with
+deterministic mock data. Paystack is used only for the optional SkyBook
+Unlimited membership.
 
 ## Tech stack
 
@@ -54,6 +54,28 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 NEXT_PUBLIC_FIREBASE_APP_ID=...
 ```
 
+## SkyBook Unlimited and Paystack
+
+SkyBook Unlimited costs **USD $15 per month** and unlocks unlimited booking
+creation, itinerary customization, and document downloads. Configure these
+server-only variables in Vercel before accepting payments:
+
+```
+NEXT_PUBLIC_APP_URL=https://www.skybookinc.app
+PAYSTACK_SECRET_KEY=sk_live_...
+PAYSTACK_SKYBOOK_MONTHLY_PLAN_CODE=PLN_...
+FIREBASE_ADMIN_PROJECT_ID=...
+FIREBASE_ADMIN_CLIENT_EMAIL=...
+FIREBASE_ADMIN_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
+```
+
+Create the Paystack plan as a recurring monthly **USD 15.00** plan, then place
+its plan code in `PAYSTACK_SKYBOOK_MONTHLY_PLAN_CODE`. Configure the Paystack
+webhook URL as `https://www.skybookinc.app/api/paystack/webhook`. The webhook
+signature and every successful charge are verified server-side before access
+is granted. Firebase Admin is required so payment intents and subscription
+records remain durable across serverless requests.
+
 Once all of these are present, the app automatically switches to real Firebase
 Auth + Firestore (see `src/lib/firebase/client.ts`). Data reads/writes go through
 `src/lib/services/store.ts`, a thin layer that picks Firestore or `localStorage`
@@ -92,7 +114,8 @@ bookings through either public flow.
 
 ## Booking flow
 
-There is no payment step anywhere in the app. Booking a flight is:
+An active SkyBook Unlimited subscription is required to create bookings. The
+flight flow itself remains:
 
 **Search Flights → Select Flight → Passenger Information → Extras → Booking Confirmation**
 
@@ -110,8 +133,10 @@ payment method is ever collected. The Booking Confirmation page shows:
 
 ## Feature overview
 
-- **Homepage** — hero search widget (one-way / round-trip / multi-city, cabin
-  classes), popular destinations, recent searches, promotions, featured airlines.
+- **Homepage** — premium hero, subscription section, popular destinations,
+  recent searches, promotions, route map, and featured airlines.
+- **SkyBook Unlimited** — USD $15 monthly recurring Paystack subscription,
+  secure callback and webhook verification, billing history, and cancellation.
 - **Search results** — mock flight generator, filters (stops, airline, price,
   departure/arrival window, refundable), sorting, per-leg selection for
   round-trip/multi-city. Airport autocomplete shows country flags.

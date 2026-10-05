@@ -24,12 +24,14 @@ export function Footer() {
               <li><Link href="/flight-status" className="hover:text-foreground">Flight status</Link></li>
               <li><Link href="/manage-booking" className="hover:text-foreground">Manage booking</Link></li>
               <li><Link href="/deals" className="hover:text-foreground">Deals</Link></li>
+              <li><Link href="/pricing" className="hover:text-foreground">SkyBook Unlimited</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-sm font-semibold">Account</h4>
             <ul className="mt-3 space-y-2 text-sm text-foreground/60">
               <li><Link href="/dashboard" className="hover:text-foreground">My Trips</Link></li>
+              <li><Link href="/dashboard/subscription" className="hover:text-foreground">Subscription</Link></li>
               <li><Link href="/auth/login" className="hover:text-foreground">Log in</Link></li>
               <li><Link href="/auth/signup" className="hover:text-foreground">Sign up</Link></li>
             </ul>

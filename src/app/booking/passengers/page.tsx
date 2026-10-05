@@ -15,6 +15,7 @@ import { passengersFormSchema, type PassengersFormValues } from "@/lib/validatio
 import { nationalities } from "@/lib/data/nationalities";
 import { useBookingHydrated } from "@/lib/store/use-hydrated";
 import type { PassengerInfo } from "@/types";
+import { SubscriptionGate } from "@/components/subscriptions/subscription-gate";
 
 function blankPassenger(type: PassengerInfo["type"], idx: number): PassengerInfo {
   return {
@@ -34,7 +35,7 @@ function blankPassenger(type: PassengerInfo["type"], idx: number): PassengerInfo
 export default function PassengersPage() {
   const hydrated = useBookingHydrated();
   if (!hydrated) return null;
-  return <PassengersForm />;
+  return <SubscriptionGate nextPath="/booking/passengers"><PassengersForm /></SubscriptionGate>;
 }
 
 function PassengersForm() {
