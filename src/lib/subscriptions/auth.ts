@@ -1,8 +1,12 @@
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { adminAuth, adminDb, isAdminFirebaseConfigured } from "@/lib/firebase/admin";
 import type { UserRole } from "@/types";
 
 const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+const googleJwks = projectId
+  ? createRemoteJWKSet(new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"))
+  : null;
 
 export interface AuthenticatedSubscriber {
   uid: string;
@@ -18,6 +22,22 @@ async function verifyFirebaseToken(token: string) {
     } catch {
       // Continue with Firebase's Identity Toolkit endpoint. This keeps user
       // sessions valid while service-account credentials are being rotated.
+    }
+  }
+  if (googleJwks && projectId) {
+    try {
+      const { payload } = await jwtVerify(token, googleJwks, {
+        issuer: `https://securetoken.google.com/${projectId}`,
+        audience: projectId,
+      });
+      if (payload.sub) {
+        return {
+          uid: payload.sub,
+          email: typeof payload.email === "string" ? payload.email : "",
+        };
+      }
+    } catch {
+      // Fall through to Firebase Identity Toolkit for a final verification.
     }
   }
   if (!firebaseApiKey) return null;
