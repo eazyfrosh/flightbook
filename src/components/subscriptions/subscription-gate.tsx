@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Crown, Loader2, LockKeyhole } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { getSubscriptionAuthHeaders } from "@/lib/subscriptions/client-auth";
+import { hasComplimentaryAccess } from "@/lib/subscriptions/access";
 import { Button } from "@/components/ui/button";
 
 export function SubscriptionGate({ children, nextPath }: { children: ReactNode; nextPath: string }) {
@@ -18,7 +19,7 @@ export function SubscriptionGate({ children, nextPath }: { children: ReactNode; 
       setChecking(false);
       return;
     }
-    if (profile?.role === "admin") {
+    if (profile?.role === "admin" || hasComplimentaryAccess(user.email)) {
       setAllowed(true);
       setChecking(false);
       return;

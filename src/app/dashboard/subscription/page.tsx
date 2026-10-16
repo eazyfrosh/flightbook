@@ -16,6 +16,7 @@ interface BillingData {
   payments: SubscriptionPayment[];
   active: boolean;
   administrator: boolean;
+  complimentaryAccess: boolean;
 }
 
 export default function SubscriptionPage() {
@@ -59,6 +60,7 @@ export default function SubscriptionPage() {
 
   if (authLoading || loading || !user) return <div className="flex min-h-[55vh] items-center justify-center"><Loader2 className="size-7 animate-spin text-brand-600" /></div>;
   const subscription = data?.subscription;
+  const includedAccess = data?.administrator || data?.complimentaryAccess;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
@@ -69,11 +71,11 @@ export default function SubscriptionPage() {
 
       <div className="mt-9 grid gap-6 lg:grid-cols-[1.35fr_.65fr]">
         <section className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-8">
-          <div className="flex items-start justify-between gap-4"><div><p className="text-sm text-foreground/50">Current plan</p><h2 className="mt-2 text-3xl font-bold">{data?.administrator ? "Administrator" : subscription ? "SkyBook Unlimited" : "Free access"}</h2></div><Badge tone={data?.active ? "green" : "neutral"}>{data?.active ? "Active" : "Inactive"}</Badge></div>
+          <div className="flex items-start justify-between gap-4"><div><p className="text-sm text-foreground/50">Current plan</p><h2 className="mt-2 text-3xl font-bold">{data?.administrator ? "Administrator" : data?.complimentaryAccess ? "Complimentary Unlimited" : subscription ? "SkyBook Unlimited" : "Free access"}</h2></div><Badge tone={data?.active ? "green" : "neutral"}>{data?.active ? "Active" : "Inactive"}</Badge></div>
           <div className="mt-8 grid gap-5 sm:grid-cols-3">
-            <div><p className="text-xs text-foreground/50">Price</p><p className="mt-1 font-semibold">{data?.administrator ? "Included" : subscription ? "$15 / month" : "—"}</p></div>
-            <div><p className="text-xs text-foreground/50">Status</p><p className="mt-1 font-semibold capitalize">{subscription?.status.replace("_", " ") ?? (data?.administrator ? "active" : "not subscribed")}</p></div>
-            <div><p className="text-xs text-foreground/50">Access through</p><p className="mt-1 font-semibold">{subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString() : data?.administrator ? "Unlimited" : "—"}</p></div>
+            <div><p className="text-xs text-foreground/50">Price</p><p className="mt-1 font-semibold">{includedAccess ? "Included" : subscription ? "$15 / month" : "—"}</p></div>
+            <div><p className="text-xs text-foreground/50">Status</p><p className="mt-1 font-semibold capitalize">{subscription?.status.replace("_", " ") ?? (includedAccess ? "active" : "not subscribed")}</p></div>
+            <div><p className="text-xs text-foreground/50">Access through</p><p className="mt-1 font-semibold">{subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString() : includedAccess ? "Unlimited" : "—"}</p></div>
           </div>
           {data?.active && <div className="mt-7 flex items-center gap-2 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300"><CheckCircle2 size={17} /> Unlimited booking and itinerary access is enabled.</div>}
           {subscription?.status === "active" && <Button className="mt-7" variant="outline" disabled={cancelling} onClick={cancelRenewal}>{cancelling && <Loader2 className="size-4 animate-spin" />}Cancel future renewal</Button>}
