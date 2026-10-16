@@ -65,6 +65,9 @@ NEXT_PUBLIC_APP_URL=https://www.skybookinc.app
 PAYSTACK_SECRET_KEY=sk_live_...
 PAYSTACK_SKYBOOK_MONTHLY_PLAN_CODE=PLN_... # the Skybook ₦20,000 monthly plan
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_... # added automatically when the private Blob store is connected
+RESEND_API_KEY=re_...
+SKYBOOK_EMAIL_FROM=SkyBook <bookings@skybookinc.app>
+SKYBOOK_EMAIL_REPLY_TO=support@skybookinc.app # optional
 ```
 
 Create the Paystack plan as a recurring monthly **NGN ₦20,000** plan, then place
@@ -74,6 +77,11 @@ signature and every successful charge are verified server-side before access
 is granted. Connect a private Vercel Blob store to the FlightBook project so
 payment intents, subscriptions, payments, and webhook events remain durable
 across serverless requests.
+
+Confirmation emails are delivered through Resend. Verify `skybookinc.app` in
+Resend, then add `RESEND_API_KEY` and `SKYBOOK_EMAIL_FROM` to Vercel. The email
+uses a table-based blue and white layout so it renders consistently in common
+desktop and mobile email clients.
 
 Once all of these are present, the app automatically switches to real Firebase
 Auth + Firestore (see `src/lib/firebase/client.ts`). Data reads/writes go through

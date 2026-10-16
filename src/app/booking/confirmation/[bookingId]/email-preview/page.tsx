@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AirlineLogo } from "@/components/ui/airline-logo";
 import { LoadingState } from "@/components/ui/loading-state";
 import { getBooking } from "@/lib/services/bookings";
+import { getSubscriptionAuthHeaders } from "@/lib/subscriptions/client-auth";
 import { extrasLineItems } from "@/lib/data/extras-pricing";
 import { cabinLabel, formatCurrency, formatDateLong, formatTime } from "@/lib/utils";
 import type { Booking } from "@/types";
@@ -18,6 +19,7 @@ export default function EmailPreviewPage() {
   const router = useRouter();
   const [booking, setBooking] = useState<Booking | null | undefined>(undefined);
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     getBooking(bookingId).then((foundBooking) => {
@@ -40,7 +42,7 @@ export default function EmailPreviewPage() {
 
   const extraLineItems = extrasLineItems(booking.extras);
 
-  function sendEmail() {
+  async function sendEmail() {
     if (!booking) return;
     const recipient = recipientEmail.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
@@ -48,28 +50,22 @@ export default function EmailPreviewPage() {
       return;
     }
 
-    const flightSummary = booking.flights
-      .map((flight) => {
-        const first = flight.segments[0];
-        const last = flight.segments[flight.segments.length - 1];
-        return `${first.airline.name}: ${first.originCode} to ${last.destinationCode} on ${formatDateLong(first.departureTime)}`;
-      })
-      .join("\n");
-    const subject = `Your SkyBook itinerary — confirmation ${booking.bookingReference}`;
-    const body = [
-      `Hi ${booking.passengers[0]?.firstName ?? "traveler"},`,
-      "",
-      `Your SkyBook booking ${booking.bookingReference} is confirmed.`,
-      "",
-      flightSummary,
-      "",
-      `Total: ${formatCurrency(booking.totalPrice, booking.currency)}`,
-      "",
-      "Safe travels!",
-      "The SkyBook team",
-    ].join("\n");
-
-    window.location.href = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setSending(true);
+    try {
+      const headers = await getSubscriptionAuthHeaders();
+      const response = await fetch("/api/email/itinerary", {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ recipient, booking }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error ?? "The confirmation email could not be sent.");
+      toast.success(`Confirmation email sent to ${recipient}.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The confirmation email could not be sent.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -100,8 +96,8 @@ export default function EmailPreviewPage() {
             placeholder="name@example.com"
             className="min-w-0 flex-1 rounded-xl border border-black/10 bg-white px-3.5 py-3 text-sm outline-none focus:border-brand-400 dark:border-white/15 dark:bg-neutral-900"
           />
-          <Button type="button" onClick={sendEmail} className="sm:w-auto">
-            <Send size={16} /> Send email
+          <Button type="button" onClick={sendEmail} disabled={sending} className="sm:w-auto">
+            <Send size={16} /> {sending ? "Sending…" : "Send email"}
           </Button>
         </div>
       </section>
