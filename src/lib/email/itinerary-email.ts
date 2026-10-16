@@ -10,8 +10,44 @@ function escapeHtml(value: unknown) {
 }
 
 function safeLogoUrl(logoSrc: string, origin: string) {
-  if (!logoSrc.startsWith("/airlines/") && !logoSrc.startsWith("/api/airline-logo?")) return null;
+  if (
+    !logoSrc.startsWith("/airline-logos/") &&
+    !logoSrc.startsWith("/airlines/") &&
+    !logoSrc.startsWith("/api/airline-logo?")
+  ) return null;
   return `${origin}${logoSrc}`;
+}
+
+interface InlineLogoAttachment {
+  path: string;
+  filename: string;
+  content_id: string;
+  content_type: "image/png";
+}
+
+function collectInlineLogos(booking: Booking, origin: string) {
+  const contentIds = new Map<string, string>();
+  const attachments: InlineLogoAttachment[] = [];
+
+  for (const flight of booking.flights) {
+    const first = flight.segments[0];
+    if (!first) continue;
+    const airline = findAirline(first.airline.id) ?? first.airline;
+    const path = safeLogoUrl(airline.logoSrc, origin);
+    if (!path || contentIds.has(path)) continue;
+
+    const contentId = `airline-logo-${attachments.length + 1}`;
+    const safeId = airline.id.replace(/[^a-z0-9_-]/gi, "-") || `logo-${attachments.length + 1}`;
+    contentIds.set(path, contentId);
+    attachments.push({
+      path,
+      filename: `${safeId}.png`,
+      content_id: contentId,
+      content_type: "image/png",
+    });
+  }
+
+  return { contentIds, attachments };
 }
 
 export function itineraryEmailSubject(booking: Booking) {
@@ -19,6 +55,7 @@ export function itineraryEmailSubject(booking: Booking) {
 }
 
 export function renderItineraryEmail(booking: Booking, origin: string) {
+  const inlineLogos = collectInlineLogos(booking, origin);
   const passengerName = booking.passengers[0]
     ? `${booking.passengers[0].firstName} ${booking.passengers[0].lastName}`
     : "Traveler";
@@ -28,8 +65,9 @@ export function renderItineraryEmail(booking: Booking, origin: string) {
     if (!first || !last) return "";
     const airline = findAirline(first.airline.id) ?? first.airline;
     const logoUrl = safeLogoUrl(airline.logoSrc, origin);
+    const contentId = logoUrl ? inlineLogos.contentIds.get(logoUrl) : null;
     const logo = logoUrl
-      ? `<img src="${escapeHtml(logoUrl)}" width="38" height="38" alt="${escapeHtml(airline.name)}" style="display:block;width:38px;height:38px;object-fit:contain;border-radius:9px;background:#fff;border:1px solid #dbeafe;padding:4px;box-sizing:border-box">`
+      ? `<img src="${contentId ? `cid:${contentId}` : escapeHtml(logoUrl)}" width="38" height="38" alt="${escapeHtml(airline.name)}" style="display:block;width:38px;height:38px;object-fit:contain;border-radius:9px;background:#fff;border:1px solid #dbeafe;padding:4px;box-sizing:border-box">`
       : `<span style="display:inline-block;width:38px;height:38px;line-height:38px;text-align:center;border-radius:9px;background:#0758b7;color:#fff;font-weight:700;font-size:12px">${escapeHtml(airline.code)}</span>`;
     return `
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:14px;border:1px solid #dbeafe;border-radius:14px;border-collapse:separate;background:#ffffff">
@@ -89,5 +127,5 @@ export function renderItineraryEmail(booking: Booking, origin: string) {
     "Safe travels! — The SkyBook team",
   ].join("\n\n");
 
-  return { html, text };
+  return { html, text, attachments: inlineLogos.attachments };
 }

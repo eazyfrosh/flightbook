@@ -66,6 +66,7 @@ export async function POST(request: Request) {
       subject: itineraryEmailSubject(booking),
       html: content.html,
       text: content.text,
+      attachments: content.attachments,
       tags: [{ name: "booking_reference", value: booking.bookingReference }],
     }),
   });
